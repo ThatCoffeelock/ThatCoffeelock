@@ -1,0 +1,91 @@
+; ============================================================
+; TCB_InnkeeperDialogue.obscript
+; ============================================================
+; Three RESULT SCRIPTS for the innkeeper NPC dialogue topics.
+; Paste each block's commands into the Result field of the
+; matching dialogue entry in the Construction Set.
+;
+; Topics to create on the innkeeper NPC:
+;   TCB_InnBuy       "I would like to buy this inn."
+;   TCB_InnUpgrade2  "I would like to expand the inn."
+;   TCB_InnUpgrade3  "I would like to upgrade the inn further."
+;
+; CS CONDITION LIST for each topic (set in the Conditions tab):
+;   TCB_InnBuy:
+;     GetQuestVariable  TCB_BusinessQuest  iInnTier  ==  0
+;     GetGold                                        >=  5000
+;   TCB_InnUpgrade2:
+;     GetQuestVariable  TCB_BusinessQuest  iInnTier  ==  1
+;     GetGold                                        >=  10000
+;   TCB_InnUpgrade3:
+;     GetQuestVariable  TCB_BusinessQuest  iInnTier  ==  2
+;     GetGold                                        >=  20000
+;
+; Purchase cost:      5,000 gold  -> Tier 1 (50 gold/day)
+; Upgrade to Tier 2: 10,000 gold             (100 gold/day)
+; Upgrade to Tier 3: 20,000 gold             (150 gold/day)
+; ============================================================
+
+
+; ============================================================
+; RESULT SCRIPT: TCB_InnBuyResult
+; Paste into the Result field of topic TCB_InnBuy.
+; ============================================================
+
+if ( player.GetItemCount Gold001 < 5000 )
+    MessageBox "You cannot afford this inn. You need 5,000 gold."
+    return
+endif
+
+if ( TCB_BusinessQuest.iInnTier != 0 )
+    MessageBox "You already own this inn."
+    return
+endif
+
+player.RemoveItem Gold001 5000
+set TCB_BusinessQuest.iInnTier to 1
+MessageBox "Congratulations! You are now the proud owner of this inn. You will receive 50 gold each day."
+
+
+; ============================================================
+; RESULT SCRIPT: TCB_InnUpgrade2Result
+; Paste into the Result field of topic TCB_InnUpgrade2.
+; ============================================================
+
+if ( player.GetItemCount Gold001 < 10000 )
+    MessageBox "You cannot afford this expansion. You need 10,000 gold."
+    return
+endif
+
+if ( TCB_BusinessQuest.iInnTier != 1 )
+    MessageBox "You must own the inn before you can expand it."
+    return
+endif
+
+player.RemoveItem Gold001 10000
+set TCB_BusinessQuest.iInnTier to 2
+MessageBox "The inn has been expanded with new rooms and a larger common hall. You will now receive 100 gold each day."
+
+
+; ============================================================
+; RESULT SCRIPT: TCB_InnUpgrade3Result
+; Paste into the Result field of topic TCB_InnUpgrade3.
+; ============================================================
+
+if ( player.GetItemCount Gold001 < 20000 )
+    MessageBox "You cannot afford this upgrade. You need 20,000 gold."
+    return
+endif
+
+if ( TCB_BusinessQuest.iInnTier != 2 )
+    MessageBox "The inn must already be expanded before this final upgrade."
+    return
+endif
+
+player.RemoveItem Gold001 20000
+set TCB_BusinessQuest.iInnTier to 3
+MessageBox "The inn is now a grand establishment. You will receive 150 gold each day."
+
+; ============================================================
+; End of TCB_InnkeeperDialogue.obscript
+; ============================================================

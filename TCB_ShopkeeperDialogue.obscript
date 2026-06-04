@@ -1,0 +1,122 @@
+; ============================================================
+; TCB_ShopkeeperDialogue.obscript
+; ============================================================
+; Dialogue result scripts and condition notes for purchasing
+; and upgrading a shop from its NPC owner.
+;
+; Copy only the code inside each result script's Begin/End
+; into the corresponding dialogue topic's Result field in the CS.
+; Do NOT include ScriptName or Begin/End headers in the Result
+; field — paste the function body lines only.
+;
+; Topics needed on the shopkeeper NPC:
+;   TCB_ShopBuy       "I would like to buy this shop."
+;   TCB_ShopUpgrade2  "I would like to expand the shop."
+;   TCB_ShopUpgrade3  "I would like to renovate the shop."
+;
+; Purchase cost:       3,000 gold  ->  Tier 1 ( 75 gold/day)
+; Upgrade to Tier 2:   6,000 gold  ->  Tier 2 (150 gold/day)
+; Upgrade to Tier 3:  12,000 gold  ->  Tier 3 (225 gold/day)
+; ============================================================
+
+
+; ============================================================
+; TOPIC: TCB_ShopBuy
+; "I would like to buy this shop."
+; ============================================================
+
+; --- CS Conditions -------------------------------------------
+;
+;   GetQuestVariable  TCB_BusinessQuest  iShopTier  ==  0
+;   GetGold                                         >=  3000
+;
+; --- PASTE INTO RESULT FIELD: TCB_ShopBuy --------------------
+
+ScriptName TCB_ShopBuyResult
+
+Begin ScriptEffectStart
+
+    if ( TCB_BusinessQuest.iShopTier != 0 )
+        MessageBox "You already own this shop."
+        return
+    endif
+
+    if ( player.GetItemCount Gold001 < 3000 )
+        MessageBox "You cannot afford this shop. You need 3,000 gold."
+        return
+    endif
+
+    player.RemoveItem Gold001 3000
+    set TCB_BusinessQuest.iShopTier to 1
+    MessageBox "Excellent! The shop is yours. You will receive 75 gold each day from its profits."
+
+End
+
+
+; ============================================================
+; TOPIC: TCB_ShopUpgrade2
+; "I would like to expand the shop."
+; ============================================================
+
+; --- CS Conditions -------------------------------------------
+;
+;   GetQuestVariable  TCB_BusinessQuest  iShopTier  ==  1
+;   GetGold                                         >=  6000
+;
+; --- PASTE INTO RESULT FIELD: TCB_ShopUpgrade2 ---------------
+
+ScriptName TCB_ShopUpgrade2Result
+
+Begin ScriptEffectStart
+
+    if ( TCB_BusinessQuest.iShopTier != 1 )
+        MessageBox "You must own the shop at Tier 1 before you can expand it."
+        return
+    endif
+
+    if ( player.GetItemCount Gold001 < 6000 )
+        MessageBox "You cannot afford this expansion. You need 6,000 gold."
+        return
+    endif
+
+    player.RemoveItem Gold001 6000
+    set TCB_BusinessQuest.iShopTier to 2
+    MessageBox "The shop has been expanded with new stock and additional stalls. You will now receive 150 gold each day."
+
+End
+
+
+; ============================================================
+; TOPIC: TCB_ShopUpgrade3
+; "I would like to renovate the shop."
+; ============================================================
+
+; --- CS Conditions -------------------------------------------
+;
+;   GetQuestVariable  TCB_BusinessQuest  iShopTier  ==  2
+;   GetGold                                         >=  12000
+;
+; --- PASTE INTO RESULT FIELD: TCB_ShopUpgrade3 ---------------
+
+ScriptName TCB_ShopUpgrade3Result
+
+Begin ScriptEffectStart
+
+    if ( TCB_BusinessQuest.iShopTier != 2 )
+        MessageBox "The shop must already be at Tier 2 before this final renovation."
+        return
+    endif
+
+    if ( player.GetItemCount Gold001 < 12000 )
+        MessageBox "You cannot afford this renovation. You need 12,000 gold."
+        return
+    endif
+
+    player.RemoveItem Gold001 12000
+    set TCB_BusinessQuest.iShopTier to 3
+    MessageBox "The shop is now one of the finest establishments in the region. You will receive 225 gold each day."
+
+End
+; ============================================================
+; End of TCB_ShopkeeperDialogue.obscript
+; ============================================================

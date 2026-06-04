@@ -1,0 +1,132 @@
+; ============================================================
+; TCB_MainQuest.obscript
+; Quest script attached to: TCB_BusinessQuest
+; ============================================================
+; This script runs every GameMode frame on the quest object.
+; It fires the daily income payout exactly once per in-game
+; calendar day, depositing gold for every owned business.
+;
+; Business tiers:
+;   0 = not owned
+;   1 = base income
+;   2 = double income
+;   3 = triple income
+;
+; Daily gold per tier-1 unit:
+;   Inn  =  50 gold   (tier 2: 100,  tier 3: 150)
+;   Shop =  75 gold   (tier 2: 150,  tier 3: 225)
+;   Farm =  60 gold   (tier 2: 120,  tier 3: 180)
+;
+; SYNTAX NOTES (vanilla ObScript, no OBSE required):
+;   - Quest variables are accessed as <QuestEditorID>.<varName>
+;     when read from an outside script.
+;   - This script lives ON the quest, so its own variables are
+;     referenced directly (no qualifier needed).
+;   - Gold item FormID in the base game is Gold001.
+;   - GameDaysPassed is a global float; we truncate to int via
+;     assignment to a short variable.
+; ============================================================
+
+ScriptName TCB_MainQuestScript
+
+; ---- Ownership tiers (0-3) ----------------------------------
+short iInnTier
+short iShopTier
+short iFarmTier
+
+; ---- Payment tracking ---------------------------------------
+; Stored as long because GameDaysPassed grows without bound.
+; iLastPaidDay holds the integer day on which income was last paid.
+long  iLastPaidDay
+
+; ---- Internal working variables -----------------------------
+; iCurrentDay receives the truncated integer value of GameDaysPassed.
+short iCurrentDay
+
+; bInitialized prevents a retroactive day-0 payment on first load.
+short bInitialized
+
+; iDailyGold accumulates total gold earned today for the summary
+; message.  Using a short is safe because max payout per day is
+; 150 + 225 + 180 = 555, well within the 32767 short ceiling.
+short iDailyGold
+
+; ============================================================
+Begin GameMode
+; ============================================================
+
+    ; ----------------------------------------------------------
+    ; One-time initialisation: record the current day so the
+    ; player does not receive a retroactive payout the instant
+    ; the mod is first loaded.
+    ; ----------------------------------------------------------
+    if ( bInitialized == 0 )
+        set iLastPaidDay to GameDaysPassed
+        set bInitialized to 1
+    endif
+
+    ; ----------------------------------------------------------
+    ; Truncate the float GameDaysPassed to an integer day index.
+    ; ObScript assignment to a short automatically truncates.
+    ; ----------------------------------------------------------
+    set iCurrentDay to GameDaysPassed
+
+    ; ----------------------------------------------------------
+    ; Guard: only proceed when at least one full day has passed
+    ; since the last payout.
+    ; ----------------------------------------------------------
+    if ( iCurrentDay <= iLastPaidDay )
+        return
+    endif
+
+    ; Advance the marker even if no businesses are owned, so the
+    ; check stays accurate after fast-travel or long sleeps.
+    set iLastPaidDay to iCurrentDay
+
+    ; ----------------------------------------------------------
+    ; Accumulate income.  We tally everything into iDailyGold
+    ; so we can issue a single summary MessageBox rather than
+    ; three overlapping boxes (only one MessageBox is visible
+    ; per frame; later calls would silently overwrite earlier ones).
+    ; ----------------------------------------------------------
+    set iDailyGold to 0
+
+    ; --- Inn ---------------------------------------------------
+    if ( iInnTier == 1 )
+        set iDailyGold to ( iDailyGold + 50 )
+    elseif ( iInnTier == 2 )
+        set iDailyGold to ( iDailyGold + 100 )
+    elseif ( iInnTier == 3 )
+        set iDailyGold to ( iDailyGold + 150 )
+    endif
+
+    ; --- Shop --------------------------------------------------
+    if ( iShopTier == 1 )
+        set iDailyGold to ( iDailyGold + 75 )
+    elseif ( iShopTier == 2 )
+        set iDailyGold to ( iDailyGold + 150 )
+    elseif ( iShopTier == 3 )
+        set iDailyGold to ( iDailyGold + 225 )
+    endif
+
+    ; --- Farm --------------------------------------------------
+    if ( iFarmTier == 1 )
+        set iDailyGold to ( iDailyGold + 60 )
+    elseif ( iFarmTier == 2 )
+        set iDailyGold to ( iDailyGold + 120 )
+    elseif ( iFarmTier == 3 )
+        set iDailyGold to ( iDailyGold + 180 )
+    endif
+
+    ; ----------------------------------------------------------
+    ; Pay out only if the player owns at least one business.
+    ; ----------------------------------------------------------
+    if ( iDailyGold > 0 )
+        player.AddItem Gold001 iDailyGold
+        MessageBox "Your businesses have earned you %g gold today." iDailyGold
+    endif
+
+End
+; ============================================================
+; End of TCB_MainQuestScript
+; ============================================================
