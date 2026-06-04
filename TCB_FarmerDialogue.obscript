@@ -1,122 +1,91 @@
 ; ============================================================
 ; TCB_FarmerDialogue.obscript
 ; ============================================================
-; Dialogue result scripts and condition notes for purchasing
-; and upgrading a farm from its NPC owner.
+; Three RESULT SCRIPTS for the farmer NPC dialogue topics.
+; Paste each block's commands into the Result field of the
+; matching dialogue entry in the Construction Set.
 ;
-; Copy only the code inside each result script's Begin/End
-; into the corresponding dialogue topic's Result field in the CS.
-; Do NOT include ScriptName or Begin/End headers in the Result
-; field — paste the function body lines only.
-;
-; Topics needed on the farmer NPC:
+; Topics to create on the farmer NPC:
 ;   TCB_FarmBuy       "I would like to buy this farm."
 ;   TCB_FarmUpgrade2  "I would like to expand the farm."
 ;   TCB_FarmUpgrade3  "I would like to develop the farm."
 ;
-; Purchase cost:       2,000 gold  ->  Tier 1 ( 60 gold/day)
-; Upgrade to Tier 2:   4,000 gold  ->  Tier 2 (120 gold/day)
-; Upgrade to Tier 3:   8,000 gold  ->  Tier 3 (180 gold/day)
-; ============================================================
-
-
-; ============================================================
-; TOPIC: TCB_FarmBuy
-; "I would like to buy this farm."
-; ============================================================
-
-; --- CS Conditions -------------------------------------------
+; CS CONDITION LIST for each topic (set in the Conditions tab):
+;   TCB_FarmBuy:
+;     GetQuestVariable  TCB_BusinessQuest  iFarmTier  ==  0
+;     GetGold                                         >=  2000
+;   TCB_FarmUpgrade2:
+;     GetQuestVariable  TCB_BusinessQuest  iFarmTier  ==  1
+;     GetGold                                         >=  4000
+;   TCB_FarmUpgrade3:
+;     GetQuestVariable  TCB_BusinessQuest  iFarmTier  ==  2
+;     GetGold                                         >=  8000
 ;
-;   GetQuestVariable  TCB_BusinessQuest  iFarmTier  ==  0
-;   GetGold                                         >=  2000
-;
-; --- PASTE INTO RESULT FIELD: TCB_FarmBuy --------------------
-
-ScriptName TCB_FarmBuyResult
-
-Begin ScriptEffectStart
-
-    if ( TCB_BusinessQuest.iFarmTier != 0 )
-        MessageBox "You already own this farm."
-        return
-    endif
-
-    if ( player.GetItemCount Gold001 < 2000 )
-        MessageBox "You cannot afford this farm. You need 2,000 gold."
-        return
-    endif
-
-    player.RemoveItem Gold001 2000
-    set TCB_BusinessQuest.iFarmTier to 1
-    MessageBox "The farm is now yours. You will receive 60 gold each day from the harvest."
-
-End
+; Purchase cost:      2,000 gold  -> Tier 1 ( 60 gold/day)
+; Upgrade to Tier 2:  4,000 gold             (120 gold/day)
+; Upgrade to Tier 3:  8,000 gold             (180 gold/day)
+; ============================================================
 
 
 ; ============================================================
-; TOPIC: TCB_FarmUpgrade2
-; "I would like to expand the farm."
+; RESULT SCRIPT: TCB_FarmBuyResult
+; Paste into the Result field of topic TCB_FarmBuy.
 ; ============================================================
 
-; --- CS Conditions -------------------------------------------
-;
-;   GetQuestVariable  TCB_BusinessQuest  iFarmTier  ==  1
-;   GetGold                                         >=  4000
-;
-; --- PASTE INTO RESULT FIELD: TCB_FarmUpgrade2 ---------------
+if ( player.GetItemCount Gold001 < 2000 )
+    MessageBox "You cannot afford this farm. You need 2,000 gold."
+    return
+endif
 
-ScriptName TCB_FarmUpgrade2Result
+if ( TCB_BusinessQuest.iFarmTier != 0 )
+    MessageBox "You already own this farm."
+    return
+endif
 
-Begin ScriptEffectStart
-
-    if ( TCB_BusinessQuest.iFarmTier != 1 )
-        MessageBox "You must own the farm at Tier 1 before you can expand it."
-        return
-    endif
-
-    if ( player.GetItemCount Gold001 < 4000 )
-        MessageBox "You cannot afford this expansion. You need 4,000 gold."
-        return
-    endif
-
-    player.RemoveItem Gold001 4000
-    set TCB_BusinessQuest.iFarmTier to 2
-    MessageBox "New fields have been cleared and a second barn raised. You will now receive 120 gold each day."
-
-End
+player.RemoveItem Gold001 2000
+set TCB_BusinessQuest.iFarmTier to 1
+MessageBox "The farm is now yours. You will receive 60 gold each day from the harvest."
 
 
 ; ============================================================
-; TOPIC: TCB_FarmUpgrade3
-; "I would like to develop the farm."
+; RESULT SCRIPT: TCB_FarmUpgrade2Result
+; Paste into the Result field of topic TCB_FarmUpgrade2.
 ; ============================================================
 
-; --- CS Conditions -------------------------------------------
-;
-;   GetQuestVariable  TCB_BusinessQuest  iFarmTier  ==  2
-;   GetGold                                         >=  8000
-;
-; --- PASTE INTO RESULT FIELD: TCB_FarmUpgrade3 ---------------
+if ( player.GetItemCount Gold001 < 4000 )
+    MessageBox "You cannot afford this expansion. You need 4,000 gold."
+    return
+endif
 
-ScriptName TCB_FarmUpgrade3Result
+if ( TCB_BusinessQuest.iFarmTier != 1 )
+    MessageBox "You must own the farm before you can expand it."
+    return
+endif
 
-Begin ScriptEffectStart
+player.RemoveItem Gold001 4000
+set TCB_BusinessQuest.iFarmTier to 2
+MessageBox "New fields have been cleared and a second barn raised. You will now receive 120 gold each day."
 
-    if ( TCB_BusinessQuest.iFarmTier != 2 )
-        MessageBox "The farm must already be at Tier 2 before this final development."
-        return
-    endif
 
-    if ( player.GetItemCount Gold001 < 8000 )
-        MessageBox "You cannot afford this development. You need 8,000 gold."
-        return
-    endif
+; ============================================================
+; RESULT SCRIPT: TCB_FarmUpgrade3Result
+; Paste into the Result field of topic TCB_FarmUpgrade3.
+; ============================================================
 
-    player.RemoveItem Gold001 8000
-    set TCB_BusinessQuest.iFarmTier to 3
-    MessageBox "The farm is now a thriving estate with orchards and livestock. You will receive 180 gold each day."
+if ( player.GetItemCount Gold001 < 8000 )
+    MessageBox "You cannot afford this development. You need 8,000 gold."
+    return
+endif
 
-End
+if ( TCB_BusinessQuest.iFarmTier != 2 )
+    MessageBox "The farm must already be expanded before this final development."
+    return
+endif
+
+player.RemoveItem Gold001 8000
+set TCB_BusinessQuest.iFarmTier to 3
+MessageBox "The farm is now a thriving estate with orchards and livestock. You will receive 180 gold each day."
+
 ; ============================================================
 ; End of TCB_FarmerDialogue.obscript
 ; ============================================================
