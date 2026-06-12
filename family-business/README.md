@@ -1,30 +1,37 @@
 # Family Business 🚬
 
-A turn-based property-empire game in a single HTML file. You're the new head of a crime family: buy fronts, squeeze them for income, and climb from **Associate** to **Don of the City**.
+A turn-based property-empire game in a single HTML file. Found a crime family, buy fronts, squeeze them for income, and climb from **Associate** to **Don of the City** — with d20 rolls deciding every job, takeover and tight spot along the way.
 
 ## Play
 
 Open `index.html` in any browser — no install, no build step. Progress autosaves in your browser.
 
+## Found your family
+
+A new game starts with **character creation**: name your boss and family, pick a background — *Enforcer*, *Grifter*, *Diplomat* or *Bookkeeper* — and spread 5 points across four skills:
+
+- 🔨 **Force** — muscle, intimidation, holding ground
+- 🦊 **Cunning** — jobs, angles, staying ahead of the law
+- 🗣️ **Influence** — charm, favors, friends in high places
+- 📒 **Business** — ledgers, deals, making money make money
+
+Every 2 skill levels add **+1 to the d20 rolls** that resolve jobs, muscle-outs, district takeovers, safehouse defenses and event decisions. Ranking up grants skill points, and at skill 3 / 6 / 9 each skill offers a **perk choice** (two options, pick one) on the Boss screen — 24 perks in all, from *Warlord* (Force checks roll twice) to *Compound Interest*.
+
 ## The loop
 
-Each turn is a **week**. You get a limited number of **actions** (2 + one per capo on payroll):
+Each turn is a **week**. You get limited **actions** (2 + one per capo):
 
-- **Buy** properties across five districts — docks, Old Town, Market Row, the Neon Strip, Crown Heights. The **🗺️ City Map** shows who holds every property at a glance.
-- **Squeeze** each front: *Clean*, *Firm*, or *Brutal*. Harder squeezing pays more, but draws **heat** and wears the place down faster.
-- **Repair** decaying properties and **upgrade** them for bigger takes. Own *every* property in a district to lock it down: +15% income there and a respect bonus.
-- **Run rackets** — Numbers Game, Protection, Smuggling, Counterfeiting — upgradeable side incomes that each add a little weekly heat.
-- **Hire goons** to guard your turf: they block rival retaliation, deter backlash on squeezed businesses, and raise job payouts — but armed men standing around get noticed.
-- **Run jobs** for quick cash and respect, **lay low** or **bribe City Hall** to cool the heat.
-- Watch the family **net worth** climb on the books panel.
+- **Buy** properties across five districts; **repair**, **upgrade**, and **squeeze** them (*Clean / Firm / Brutal* — more money, more heat, faster decay). The **🗺️ City Map** shows every holding in the city.
+- **Lock down districts**: own all five properties for bonus income — or, holding 3+, launch a one-night **district takeover** from the map (Force check; glorious if it works, expensive and loud if it doesn't).
+- **Run rackets** — numbers, protection, smuggling, counterfeiting — upgradeable side incomes that each add weekly heat.
+- **Hire capos** (more actions) and **goons** (guard turf, block retaliation, beef up jobs).
+- **Buy a safehouse** and upgrade its **Vault** (protects cash from crackdowns), **Barracks** (goon capacity and defense) and **Lounge** (cools heat). Rivals will assault it — defend with a Force roll.
+- **Run jobs** (Cunning check, crits double the take), **lay low**, or **bribe City Hall**.
 
-End the week to collect the take — then rivals move, buildings decay, and the streets throw events at you.
+## The rivals
 
-## The climb (and the catch)
+The **Moretti Family** and the **Volkov Bratva** are playing the same game you are — buying up the map, retaliating when muscled, assaulting your safehouse. Take a rival's last property and their Don stands exposed: order the **hit** (Force check, DC 15) to wipe the family from the city permanently. Fail, and you've made a martyr.
 
-- Deals and jobs earn **respect**. Rank up (Bannerlord-style) to unlock new districts, a bigger crew, and perks.
-- **Heat** at 100 triggers a police crackdown — cash seized, properties shuttered. Three crackdowns is a RICO case. Game over.
-- Two **rival families** — the Morettis and the Volkovs — are buying up the map. Take their property back with a clean (expensive) buyout, or muscle them out cheaply and risk retaliation.
-- Go more than $5,000 into debt and the loan sharks collect. Permanently.
+## The catch
 
-Win by becoming **Don of the City** at 1,200 respect.
+Squeezing, rackets and muscle all draw **heat**. At 100 the city cracks down — cash seized, properties shuttered. Three crackdowns is a **RICO case**: game over. Sink more than $5,000 into debt and the loan sharks collect instead. Win by reaching **Don of the City** at 1,200 respect — ideally as the last family standing.
