@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Business — A Turn-Based Empire of Fronts &amp; Favors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#13100d;
+    --bg2:#1b1713;
+    --card:#221d18;
+    --card-hi:#2a241e;
+    --line:#3a322a;
+    --gold:#d4a94e;
+    --gold-dim:#9c7c38;
+    --cream:#efe6d5;
+    --muted:#a89c89;
+    --red:#c1453c;
+    --red-hi:#e0584e;
+    --green:#7da46a;
+    --blue:#6d93b8;
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+    --r:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(1200px 600px at 70% -10%, rgba(212,169,78,.06), transparent 60%),
+      radial-gradient(900px 500px at 0% 110%, rgba(193,69,60,.05), transparent 60%),
+      var(--bg);
+    color:var(--cream);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:14px;
+    line-height:1.45;
+    min-height:100%;
+  }
+  h1,h2,h3,.serif{font-family:'Cinzel',serif;letter-spacing:.04em}
+  button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  button:disabled{opacity:.38;cursor:not-allowed}
+
+  /* ===== top bar ===== */
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    padding:12px 20px;
+    background:linear-gradient(180deg, rgba(19,16,13,.97), rgba(19,16,13,.92));
+    border-bottom:1px solid var(--line);
+    backdrop-filter:blur(8px);
+  }
+  .brand{display:flex;flex-direction:column;min-width:170px}
+  .brand h1{font-size:19px;font-weight:900;color:var(--gold);line-height:1.1;white-space:nowrap}
+  .brand small{color:var(--muted);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+  .stat{display:flex;flex-direction:column;gap:3px;min-width:96px}
+  .stat .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .stat .val{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;transition:color .3s}
+  .stat .val.flash-up{color:var(--green)}
+  .stat .val.flash-down{color:var(--red-hi)}
+  .stat .sub{font-size:10.5px;color:var(--muted)}
+  .meter{width:130px;height:7px;border-radius:4px;background:#0d0b09;overflow:hidden;border:1px solid var(--line)}
+  .meter>i{display:block;height:100%;border-radius:4px;transition:width .6s cubic-bezier(.22,1,.36,1), background .4s}
+  .respect-fill{background:linear-gradient(90deg,var(--gold-dim),var(--gold))}
+  .heat-fill{background:linear-gradient(90deg,#8a5a2c,var(--red),var(--red-hi))}
+  .strikes{display:flex;gap:3px;margin-top:1px}
+  .strike{width:9px;height:9px;border-radius:50%;border:1px solid var(--line);background:#0d0b09;transition:background .4s}
+  .strike.on{background:var(--red-hi);box-shadow:0 0 7px rgba(224,88,78,.7)}
+  .ap-pips{display:flex;gap:4px;margin-top:2px}
+  .pip{width:11px;height:11px;border-radius:50%;border:1px solid var(--gold-dim);background:transparent;transition:background .3s, box-shadow .3s}
+  .pip.on{background:var(--gold);box-shadow:0 0 6px rgba(212,169,78,.55)}
+  .spacer{flex:1}
+  .btn{
+    padding:9px 16px;border-radius:9px;font-weight:600;font-size:13px;
+    border:1px solid var(--line);background:var(--card);color:var(--cream);
+    transition:transform .12s, background .2s, border-color .2s, box-shadow .2s;
+  }
+  .btn:hover:not(:disabled){background:var(--card-hi);border-color:var(--gold-dim);transform:translateY(-1px)}
+  .btn:active:not(:disabled){transform:translateY(0)}
+  .btn.primary{
+    background:linear-gradient(180deg,#e3b95e,#c2913a);color:#1d150a;border-color:#e3b95e;
+    font-family:'Cinzel',serif;font-weight:700;letter-spacing:.06em;font-size:14px;padding:11px 22px;
+    box-shadow:0 4px 16px rgba(212,169,78,.25);
+  }
+  .btn.primary:hover:not(:disabled){background:linear-gradient(180deg,#f0c869,#d4a141);transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,169,78,.4)}
+  .btn.danger{border-color:#6e3631;color:var(--red-hi)}
+  .btn.danger:hover:not(:disabled){border-color:var(--red);background:#2a1c19}
+  .btn.small{padding:5px 10px;font-size:12px;border-radius:7px}
+  .btn.ghost{border-color:transparent;color:var(--muted)}
+  .btn.ghost:hover:not(:disabled){color:var(--cream);border-color:var(--line)}
+
+  /* ===== layout ===== */
+  .layout{display:grid;grid-template-columns:1fr 290px;gap:18px;padding:18px 20px;max-width:1440px;margin:0 auto}
+  @media (max-width:980px){.layout{grid-template-columns:1fr}}
+
+  /* ===== districts ===== */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{
+    padding:8px 15px;border-radius:9px;border:1px solid var(--line);
+    background:var(--card);color:var(--muted);font-weight:600;font-size:12.5px;
+    transition:all .2s;display:flex;align-items:center;gap:7px;
+  }
+  .tab:hover:not(:disabled){color:var(--cream);border-color:var(--gold-dim)}
+  .tab.active{background:var(--card-hi);color:var(--gold);border-color:var(--gold-dim);box-shadow:0 2px 10px rgba(0,0,0,.3)}
+  .tab .own-count{font-size:10.5px;background:#0d0b09;border-radius:10px;padding:1px 7px;color:var(--gold)}
+  .tab.locked{opacity:.45}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:13px}
+  .pcard{
+    position:relative;
+    background:linear-gradient(180deg,var(--card),#1e1914);
+    border:1px solid var(--line);border-radius:var(--r);
+    padding:14px;display:flex;flex-direction:column;gap:9px;
+    transition:transform .18s, box-shadow .18s, border-color .18s;
+    animation:cardIn .35s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .pcard:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .pcard.mine{border-color:#5a4a2a}
+  .pcard.mine:hover{border-color:var(--gold-dim)}
+  .pcard.closed{filter:grayscale(.6)}
+  .pcard .head{display:flex;align-items:flex-start;gap:9px}
+  .pcard .icon{font-size:24px;line-height:1;filter:saturate(.8)}
+  .pcard .nm{font-weight:700;font-size:13.5px;line-height:1.25}
+  .pcard .typ{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+  .badge{
+    margin-left:auto;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    padding:3px 8px;border-radius:6px;white-space:nowrap;
+  }
+  .badge.you{background:rgba(212,169,78,.16);color:var(--gold);border:1px solid rgba(212,169,78,.35)}
+  .badge.sale{background:rgba(168,156,137,.12);color:var(--muted);border:1px solid var(--line)}
+  .badge.r0{background:rgba(193,69,60,.14);color:var(--red-hi);border:1px solid rgba(193,69,60,.4)}
+  .badge.r1{background:rgba(109,147,184,.14);color:var(--blue);border:1px solid rgba(109,147,184,.4)}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px}
+  .row .k{color:var(--muted)}
+  .row .v{font-weight:600;font-variant-numeric:tabular-nums}
+  .v.gold{color:var(--gold)}
+  .v.green{color:var(--green)}
+  .condbar{flex:1;height:6px;border-radius:4px;background:#0d0b09;border:1px solid #2c261f;overflow:hidden;margin:0 8px}
+  .condbar>i{display:block;height:100%;transition:width .5s cubic-bezier(.22,1,.36,1), background .4s}
+  .lvl{display:flex;gap:3px}
+  .lvl i{width:8px;height:8px;border-radius:2px;background:#0d0b09;border:1px solid var(--line)}
+  .lvl i.on{background:var(--gold);border-color:var(--gold)}
+  .squeeze{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .squeeze button{
+    flex:1;padding:5px 0;font-size:10.5px;font-weight:600;letter-spacing:.04em;
+    color:var(--muted);background:#1a1511;transition:all .18s;
+  }
+  .squeeze button+button{border-left:1px solid var(--line)}
+  .squeeze button.on{color:#1d150a;background:var(--gold)}
+  .squeeze button.on.hot{background:var(--red-hi);color:#fff}
+  .pcard .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+  .pcard .acts .btn{flex:1;min-width:62px;text-align:center}
+  .closed-tag{
+    position:absolute;inset:0;border-radius:var(--r);
+    background:rgba(13,11,9,.72);display:flex;align-items:center;justify-content:center;
+    font-family:'Cinzel',serif;font-weight:700;color:var(--red-hi);letter-spacing:.12em;font-size:13px;
+    flex-direction:column;gap:4px;text-align:center;padding:10px;
+  }
+  .closed-tag small{font-family:'Inter';color:var(--muted);letter-spacing:0;font-weight:500;font-size:11px}
+
+  /* income float */
+  .float-cash{
+    position:absolute;top:8px;right:10px;font-weight:700;color:var(--green);font-size:13px;
+    pointer-events:none;animation:floatUp 1.4s ease-out forwards;font-variant-numeric:tabular-nums;
+  }
+  @keyframes floatUp{0%{opacity:0;transform:translateY(6px)}15%{opacity:1}100%{opacity:0;transform:translateY(-22px)}}
+
+  /* ===== side panel ===== */
+  .panel{display:flex;flex-direction:column;gap:14px}
+  .box{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+  .box h3{font-size:12px;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+  .crewline{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;margin-bottom:8px}
+  .crewline .k{color:var(--muted)}
+  .ops{display:flex;flex-direction:column;gap:7px}
+  .op{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--card);
+    transition:all .18s;text-align:left;width:100%;
+  }
+  .op:hover:not(:disabled){border-color:var(--gold-dim);background:var(--card-hi)}
+  .op .t{font-weight:600;font-size:12.5px}
+  .op .d{font-size:10.5px;color:var(--muted)}
+  .op .cost{font-size:11px;color:var(--gold);font-weight:600;white-space:nowrap}
+  #log{display:flex;flex-direction:column-reverse;gap:6px;max-height:300px;overflow-y:auto;scrollbar-width:thin}
+  #log p{font-size:11.5px;color:var(--muted);border-left:2px solid var(--line);padding:1px 0 1px 9px;animation:logIn .3s ease}
+  #log p b{color:var(--cream)}
+  #log p.good{border-color:var(--green)}
+  #log p.bad{border-color:var(--red)}
+  #log p.gold{border-color:var(--gold)}
+  @keyframes logIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1}}
+
+  /* ===== toasts ===== */
+  #toasts{position:fixed;top:74px;right:18px;z-index:90;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  .toast{
+    background:var(--card-hi);border:1px solid var(--line);border-left:3px solid var(--gold);
+    padding:10px 14px;border-radius:9px;font-size:12.5px;max-width:300px;box-shadow:var(--shadow);
+    animation:toastIn .3s cubic-bezier(.22,1,.36,1), toastOut .4s ease 3.4s forwards;
+  }
+  .toast.bad{border-left-color:var(--red-hi)}
+  .toast.good{border-left-color:var(--green)}
+  @keyframes toastIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+  @keyframes toastOut{to{opacity:0;transform:translateX(24px)}}
+
+  /* ===== modal ===== */
+  #overlay{
+    position:fixed;inset:0;z-index:100;background:rgba(10,8,6,.7);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;padding:20px;
+  }
+  #overlay.show{display:flex;animation:fadeIn .25s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{
+    background:linear-gradient(180deg,#252019,#1a1511);
+    border:1px solid var(--gold-dim);border-radius:16px;max-width:480px;width:100%;
+    padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.7);
+    animation:modalIn .35s cubic-bezier(.22,1,.36,1);
+    max-height:88vh;overflow-y:auto;
+  }
+  @keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+  .modal .kicker{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .modal h2{color:var(--gold);font-size:21px;margin-bottom:12px;line-height:1.25}
+  .modal .body{color:var(--cream);font-size:13.5px;margin-bottom:18px;white-space:pre-line}
+  .modal .body .rep-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #2c261f;font-size:13px}
+  .modal .body .rep-row:last-child{border-bottom:none}
+  .modal .body .rep-row b{font-variant-numeric:tabular-nums}
+  .modal .choices{display:flex;flex-direction:column;gap:8px}
+  .modal .choices .btn{width:100%;text-align:center;padding:11px}
+  .tierflare{font-size:42px;text-align:center;margin-bottom:8px;animation:flare 1s ease}
+  @keyframes flare{0%{transform:scale(.4) rotate(-8deg);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+  /* ===== city map ===== */
+  #grid.mapwrap{display:block}
+  #map{width:100%;height:auto;display:block;animation:cardIn .35s cubic-bezier(.22,1,.36,1) both}
+  .dblock{cursor:pointer}
+  .dblock .zone{fill:#221d18;stroke:var(--line);stroke-width:1.5;transition:stroke .25s, fill .25s}
+  .dblock:hover .zone{fill:#2a241e;stroke:var(--gold-dim)}
+  .dblock.locked{opacity:.45}
+  .dblock.ctrl .zone{stroke:var(--gold);filter:drop-shadow(0 0 9px rgba(212,169,78,.35))}
+  .dblock .dn{font-family:'Cinzel',serif;font-size:15px;font-weight:700;fill:var(--cream)}
+  .dblock.ctrl .dn{fill:var(--gold)}
+  .dblock .ds{font-family:'Inter',sans-serif;font-size:10.5px;fill:var(--muted)}
+  .dblock .dot{stroke:#0d0b09;stroke-width:1}
+  .water{fill:#15202b}
+  .maplegend{font-family:'Inter',sans-serif;font-size:10.5px;fill:var(--muted)}
+
+  /* ===== d20 rolls ===== */
+  .rollline{
+    display:flex;align-items:center;gap:10px;margin:12px 0;
+    padding:10px 14px;border-radius:10px;background:#15110d;border:1px solid var(--line);
+    font-size:13px;font-variant-numeric:tabular-nums;
+  }
+  .rollline .die{
+    font-family:'Cinzel',serif;font-size:21px;font-weight:900;min-width:44px;height:44px;
+    display:flex;align-items:center;justify-content:center;border-radius:9px;
+    background:linear-gradient(180deg,#2a241e,#1c1712);border:1px solid var(--gold-dim);color:var(--gold);
+    animation:dieRoll .7s cubic-bezier(.22,1,.36,1);
+  }
+  .rollline .die.crit{border-color:var(--green);color:var(--green);box-shadow:0 0 12px rgba(125,164,106,.4)}
+  .rollline .die.fumble{border-color:var(--red);color:var(--red-hi);box-shadow:0 0 12px rgba(193,69,60,.4)}
+  @keyframes dieRoll{0%{transform:rotate(-160deg) scale(.3);opacity:0}60%{transform:rotate(12deg) scale(1.12)}100%{transform:none;opacity:1}}
+  .rollline .math{color:var(--muted)}
+  .rollline .math b{color:var(--cream)}
+  .rollline .verdict{margin-left:auto;font-family:'Cinzel',serif;font-weight:700;letter-spacing:.08em;font-size:12.5px}
+  .rollline .verdict.ok{color:var(--green)}
+  .rollline .verdict.no{color:var(--red-hi)}
+
+  /* ===== character sheet / creation ===== */
+  .modal.wide{max-width:600px}
+  .skillrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #2c261f}
+  .skillrow .ic{font-size:20px;width:26px;text-align:center}
+  .skillrow .meta{flex:1;min-width:0}
+  .skillrow .meta .t{font-weight:700;font-size:13.5px}
+  .skillrow .meta .d{font-size:11px;color:var(--muted)}
+  .skillrow .pips{display:flex;gap:3px}
+  .skillrow .pips i{width:9px;height:9px;border-radius:2px;background:#0d0b09;border:1px solid var(--line)}
+  .skillrow .pips i.on{background:var(--gold);border-color:var(--gold)}
+  .skillrow .mod{font-weight:700;color:var(--gold);min-width:34px;text-align:center;font-variant-numeric:tabular-nums}
+  .skillrow .bump{width:30px;height:30px;border-radius:8px;border:1px solid var(--gold-dim);color:var(--gold);font-size:17px;font-weight:700;transition:all .15s}
+  .skillrow .bump:hover:not(:disabled){background:var(--gold);color:#1d150a}
+  .perkpick{display:flex;gap:8px;margin:7px 0 4px 36px;flex-wrap:wrap}
+  .perk{
+    flex:1;min-width:170px;text-align:left;padding:8px 10px;border-radius:9px;
+    border:1px dashed var(--line);background:#16110d;transition:all .18s;font-size:11.5px;
+  }
+  .perk:hover:not(:disabled):not(.chosen){border-color:var(--gold-dim);background:#1d1712}
+  .perk .pn{font-weight:700;color:var(--cream);font-size:12px}
+  .perk .pd{color:var(--muted)}
+  .perk.chosen{border-style:solid;border-color:var(--gold-dim);background:rgba(212,169,78,.08);cursor:default}
+  .perk.chosen .pn{color:var(--gold)}
+  .perk.lockedp{opacity:.45;cursor:not-allowed}
+  .bgpick{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .bgcard{
+    text-align:left;padding:12px;border-radius:11px;border:1px solid var(--line);
+    background:var(--card);transition:all .18s;
+  }
+  .bgcard:hover{border-color:var(--gold-dim);background:var(--card-hi);transform:translateY(-1px)}
+  .bgcard .bt{font-weight:700;font-size:13.5px;margin-bottom:3px}
+  .bgcard .bd{font-size:11px;color:var(--muted)}
+  .bgcard .bb{font-size:11px;color:var(--gold);margin-top:5px}
+  .cc-input{
+    width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line);
+    background:#15110d;color:var(--cream);font:inherit;margin-bottom:10px;outline:none;transition:border-color .2s;
+  }
+  .cc-input:focus{border-color:var(--gold-dim)}
+  .ptsleft{font-family:'Cinzel',serif;color:var(--gold);font-size:15px;text-align:center;margin:8px 0}
+
+  /* ===== safehouse ===== */
+  .sh-head{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+  .sh-head .ic{font-size:22px}
+  .sh-head .t{font-weight:700;font-size:13px}
+  .sh-head .d{font-size:10.5px;color:var(--muted)}
+  .shmod{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #2c261f;font-size:11.5px}
+  .shmod:last-child{border-bottom:none}
+  .shmod .k b{color:var(--cream)}
+  .shmod .k .d{color:var(--muted);font-size:10.5px}
+  .sh-offer{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;font-size:12px;border-bottom:1px solid #2c261f}
+  .sh-offer:last-child{border-bottom:none}
+
+  /* map takeover button */
+  .tko{cursor:pointer}
+  .tko rect{fill:rgba(193,69,60,.15);stroke:var(--red);stroke-width:1;transition:fill .2s}
+  .tko:hover rect{fill:rgba(193,69,60,.35)}
+  .tko text{font-family:'Cinzel',serif;font-size:11px;font-weight:700;fill:var(--red-hi);letter-spacing:.06em}
+
+  /* ===== books / rackets ===== */
+  .worth{font-size:22px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums;font-family:'Cinzel',serif}
+  .worth-sub{font-size:10.5px;color:var(--muted);margin-bottom:4px}
+  #spark{width:100%;height:40px;margin-top:8px;display:block}
+  #spark polyline{fill:none;stroke:var(--gold);stroke-width:1.4;vector-effect:non-scaling-stroke}
+  #spark .area{fill:rgba(212,169,78,.13);stroke:none}
+  .racket{display:flex;flex-direction:column;gap:5px;padding:9px 0;border-bottom:1px solid #2c261f}
+  .racket:first-child{padding-top:0}
+  .racket:last-child{border-bottom:none;padding-bottom:0}
+  .racket .top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;gap:8px}
+  .racket .top .t{font-weight:600}
+  .racket .sub{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);gap:8px}
+  .racket.lockd{opacity:.5}
+
+  .footer{max-width:1440px;margin:0 auto;padding:6px 20px 26px;color:#6b6052;font-size:11px;display:flex;gap:14px;align-items:center}
+  .footer button{text-decoration:underline;color:#8a7d6a}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <h1>FAMILY BUSINESS</h1>
+    <small id="famName">The Coffeelock Family</small>
+  </div>
+  <div class="stat">
+    <span class="lbl">Cash</span>
+    <span class="val" id="cashVal">$0</span>
+    <span class="sub" id="incomeVal">+$0 / week</span>
+  </div>
+  <div class="stat">
+    <span class="lbl" id="tierLbl">Respect — Associate</span>
+    <div class="meter"><i class="respect-fill" id="respectBar"></i></div>
+    <span class="sub" id="respectVal">0 / 60</span>
+  </div>
+  <div class="stat">
+    <span class="lbl">Heat</span>
+    <div class="meter"><i class="heat-fill" id="heatBar"></i></div>
+    <div class="strikes" id="strikes" title="Crackdown strikes — three and the Feds build a case"></div>
+  </div>
+  <div class="stat">
+    <span class="lbl">Actions</span>
+    <div class="ap-pips" id="apPips"></div>
+    <span class="sub" id="weekVal">Week 1</span>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn" id="sheetBtn">👤 The Boss</button>
+  <button class="btn primary" id="endTurnBtn">End Week ⏵</button>
+</header>
+
+<main class="layout">
+  <section>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <aside class="panel">
+    <div class="box">
+      <h3>The Books</h3>
+      <div class="worth-sub">Family net worth</div>
+      <div class="worth" id="worthVal">$0</div>
+      <svg id="spark" preserveAspectRatio="none" viewBox="0 0 100 40"></svg>
+    </div>
+    <div class="box">
+      <h3>The Crew</h3>
+      <div class="crewline"><span class="k">Capos on payroll</span><b id="capoCount">0</b></div>
+      <div class="crewline"><span class="k">Goons on the street</span><b id="goonCount">0</b></div>
+      <div class="crewline"><span class="k">Weekly wages</span><b id="wageVal">$0</b></div>
+      <div class="ops">
+        <button class="op" id="hireBtn">
+          <span><span class="t">Hire a Capo</span><br><span class="d">+1 action every week</span></span>
+          <span class="cost" id="hireCost">$400</span>
+        </button>
+        <button class="op" id="hireGoonBtn">
+          <span><span class="t">Hire a Goon</span><br><span class="d">Guards turf, beefs up jobs. Slightly conspicuous.</span></span>
+          <span class="cost" id="goonCost">$250</span>
+        </button>
+      </div>
+    </div>
+    <div class="box">
+      <h3>The Families</h3>
+      <div id="rivalsBox"></div>
+    </div>
+    <div class="box">
+      <h3>Safehouse</h3>
+      <div id="safehouse"></div>
+    </div>
+    <div class="box">
+      <h3>Rackets</h3>
+      <div id="rackets"></div>
+    </div>
+    <div class="box">
+      <h3>Operations</h3>
+      <div class="ops">
+        <button class="op" id="jobBtn">
+          <span><span class="t">🎲 Run a Job</span><br><span class="d" id="jobDesc">Risky score. Pays cash &amp; respect, draws heat.</span></span>
+          <span class="cost">1 AP</span>
+        </button>
+        <button class="op" id="layLowBtn">
+          <span><span class="t">🌒 Lay Low</span><br><span class="d">Quiet week. Heat −15.</span></span>
+          <span class="cost">1 AP</span>
+        </button>
+        <button class="op" id="bribeBtn">
+          <span><span class="t">💼 Bribe City Hall</span><br><span class="d">Heat −30. Once a week, price follows the heat.</span></span>
+          <span class="cost" id="bribeCost">$500</span>
+        </button>
+      </div>
+    </div>
+    <div class="box">
+      <h3>The Word on the Street</h3>
+      <div id="log"></div>
+    </div>
+  </aside>
+</main>
+
+<div class="footer">
+  <span>Family Business — a turn-based property racket.</span>
+  <button id="newGameBtn">Start a new family</button>
+  <button id="helpBtn">How to play</button>
+</div>
+
+<div id="toasts"></div>
+<div id="overlay"><div class="modal" id="modal"></div></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   DATA
+============================================================ */
+const TIERS = [
+  {name:"Associate",   need:0,    capos:1, perk:""},
+  {name:"Made Man",    need:60,   capos:2, perk:"Old Town opens its doors. You can keep 2 capos."},
+  {name:"Caporegime",  need:180,  capos:3, perk:"Market Row is yours to work. 3 capos. Heat cools faster."},
+  {name:"Underboss",   need:400,  capos:4, perk:"The Neon Strip lights up. 4 capos. Jobs pay half again more."},
+  {name:"Boss",        need:750,  capos:5, perk:"Crown Heights takes your calls. 5 capos. Property sellers knock 10% off for you."},
+  {name:"Don of the City", need:1200, capos:6, perk:"The whole city kisses the ring."},
+];
+
+const DISTRICTS = [
+  {name:"Little Harbor", tier:0, icon:"⚓"},
+  {name:"Old Town",      tier:1, icon:"🏛️"},
+  {name:"Market Row",    tier:2, icon:"🏪"},
+  {name:"Neon Strip",    tier:3, icon:"🎰"},
+  {name:"Crown Heights", tier:4, icon:"🏙️"},
+];
+
+const PROPS = [
+  // [district, icon, name, type, price, income]
+  [0,"🪙","Rusty Anchor Pawn","Pawn shop",900,70],
+  [0,"🍳","Dockside Diner","Diner",1200,95],
+  [0,"🧺","Harbor Laundromat","Laundromat",1500,115],
+  [0,"🍺","Fisherman's Tavern","Tavern",2000,150],
+  [0,"📦","Pier 9 Warehouse","Warehouse",2600,190],
+  [1,"💈","Crosstown Barber","Barbershop",2200,160],
+  [1,"🥩","Benedetti's Butcher","Butcher shop",3000,215],
+  [1,"🍝","Trattoria Lucia","Restaurant",2800,200],
+  [1,"🎱","Eight-Ball Hall","Pool hall",3400,240],
+  [1,"🏨","The Old Town Arms","Hotel",4500,310],
+  [2,"💎","Marlowe Jewelers","Jewelry store",5200,350],
+  [2,"🚢","Continental Imports","Import office",6000,400],
+  [2,"🔧","Redline Auto Garage","Garage",5600,380],
+  [2,"🪩","Club Velvet","Nightclub",7500,500],
+  [2,"🗳️","Dockworkers' Union","Union office",8200,540],
+  [3,"🍸","The Gilded Lily","Cocktail lounge",9500,620],
+  [3,"🥊","Iron Bell Gym","Boxing gym",8800,580],
+  [3,"🎭","Moulin Noir","Theater",11000,720],
+  [3,"🎰","The Grand Pharaoh","Casino",14000,900],
+  [3,"🛎️","Hotel Mirage","Hotel",16000,1000],
+  [4,"⚖️","Hartley & Cross LLP","Law firm",18000,1100],
+  [4,"⛳","Crown Country Club","Country club",24000,1450],
+  [4,"🏦","Meridian Private Bank","Bank",26000,1550],
+  [4,"🏢","The Pinnacle Tower","Penthouses",32000,1900],
+  [4,"🏛️","City Hall Annex","Civic lobby",40000,2400],
+];
+
+const RIVALS = [
+  {id:0, name:"The Moretti Family", short:"Moretti", cls:"r0"},
+  {id:1, name:"The Volkov Bratva",  short:"Volkov",  cls:"r1"},
+];
+
+const SKILLS = {
+  force:{icon:"🔨", name:"Force", desc:"Muscle, intimidation, holding ground.", perks:[
+    [{id:"f1a",name:"Leg Breakers",desc:"Muscle-out takeovers cost 15% less."},
+     {id:"f1b",name:"Iron Door",desc:"Goons block rival retaliation 15% more often."}],
+    [{id:"f2a",name:"Made of Fear",desc:"Brutally squeezed businesses pay 20% more."},
+     {id:"f2b",name:"Crew Discipline",desc:"Goon wages are halved."}],
+    [{id:"f3a",name:"Warlord",desc:"Force checks roll twice, keep the best."},
+     {id:"f3b",name:"Fearsome",desc:"Rival families expand 30% less often."}],
+  ]},
+  cunning:{icon:"🦊", name:"Cunning", desc:"Jobs, angles, staying ahead of the law.", perks:[
+    [{id:"c1a",name:"Lookouts",desc:"Heat from blown jobs is halved."},
+     {id:"c1b",name:"Fence Network",desc:"Jobs pay 25% more."}],
+    [{id:"c2a",name:"Ghost Books",desc:"Heat cools 2 extra each week."},
+     {id:"c2b",name:"Inside Man",desc:"The crew can run two jobs a week."}],
+    [{id:"c3a",name:"Master Plan",desc:"Jobs crit on 18+, doubling the take."},
+     {id:"c3b",name:"Vanish",desc:"Crackdowns seize half as much cash."}],
+  ]},
+  influence:{icon:"🗣️", name:"Influence", desc:"Charm, favors, friends in high places.", perks:[
+    [{id:"i1a",name:"Silver Tongue",desc:"Bribes cost 25% less."},
+     {id:"i1b",name:"Friends Downtown",desc:"Bribes shed 35 heat instead of 30."}],
+    [{id:"i2a",name:"Ward Boss",desc:"+2 respect every week, just for being you."},
+     {id:"i2b",name:"Union Ties",desc:"Controlled districts pay +25% instead of +15%."}],
+    [{id:"i3a",name:"City Contracts",desc:"+$300 a week per controlled district."},
+     {id:"i3b",name:"Untouchable",desc:"Your first crackdown leaves no strike."}],
+  ]},
+  business:{icon:"📒", name:"Business", desc:"Ledgers, deals, making money make money.", perks:[
+    [{id:"b1a",name:"Negotiator",desc:"Property purchases cost 10% less."},
+     {id:"b1b",name:"Tight Ledgers",desc:"Properties decay 1 less each week."}],
+    [{id:"b2a",name:"Renovation Crews",desc:"Repairs cost 30% less."},
+     {id:"b2b",name:"Racketeer",desc:"Racket income +25%."}],
+    [{id:"b3a",name:"Compound Interest",desc:"Earn 1% of your cash weekly (max $2,000)."},
+     {id:"b3b",name:"Empire Builder",desc:"Upgrades cost 25% less."}],
+  ]},
+};
+const SKILL_KEYS = ["force","cunning","influence","business"];
+const PERK_AT = [3,6,9]; // skill levels where a perk choice unlocks
+
+const BACKGROUNDS = [
+  {id:"enforcer", icon:"🥊", name:"The Enforcer", skill:"force",
+   desc:"You did the family's heavy lifting.", bonus:"Starts with 2 loyal goons who work for family, not wages."},
+  {id:"grifter", icon:"🎴", name:"The Grifter", skill:"cunning",
+   desc:"Cards, cons, and quick exits.", bonus:"Starts with an extra $1,000."},
+  {id:"diplomat", icon:"🤝", name:"The Diplomat", skill:"influence",
+   desc:"You know everyone worth knowing.", bonus:"Starts with 20 respect."},
+  {id:"bookkeeper", icon:"🧮", name:"The Bookkeeper", skill:"business",
+   desc:"You kept the old Don's books.", bonus:"Starts running a Numbers Game."},
+];
+
+const SAFEHOUSES = [
+  {d:0, icon:"🚢", name:"Dockside Hideout",  cost:1200,  desc:"A rusted trawler nobody looks at twice."},
+  {d:1, icon:"🍷", name:"Old Town Cellar",   cost:2600,  desc:"Brick vaults under the trattoria."},
+  {d:2, icon:"🃏", name:"Velvet Backroom",   cost:5200,  desc:"Behind the club's velvet rope."},
+  {d:3, icon:"🎰", name:"Casino Penthouse",  cost:9000,  desc:"Above the Pharaoh, behind one-way glass."},
+  {d:4, icon:"🏰", name:"Crown Estate",      cost:15000, desc:"Gates, hedges, and a very long driveway."},
+];
+const SH_MODS = [
+  {key:"vault",    icon:"🔐", name:"Vault",    desc:"Crackdowns seize 25% less cash per level."},
+  {key:"barracks", icon:"🛏️", name:"Barracks", desc:"+1 goon capacity and tougher defense per level."},
+  {key:"lounge",   icon:"🥃", name:"Lounge",   desc:"Heat cools 1 extra per week per level."},
+];
+
+const RACKETS = [
+  {icon:"🎟️", name:"Numbers Game",      tier:0, base:800,  mult:1.7, inc:90,   heat:0.3, desc:"Lottery slips in every corner store."},
+  {icon:"🛡️", name:"Protection Racket", tier:1, base:1500, mult:1.8, inc:220,  heat:0.6, desc:"Insurance, the old-fashioned kind."},
+  {icon:"⛴️", name:"Smuggling Ring",    tier:2, base:4000, mult:1.8, inc:520,  heat:1.0, desc:"Crates that skip customs."},
+  {icon:"🖨️", name:"Counterfeit Press", tier:3, base:9000, mult:1.9, inc:1200, heat:1.8, desc:"Money that prints itself."},
+];
+const RACKET_MAX = 5;
+
+const MAP_ZONES = [ // x,y,w,h in the 800x460 map viewBox
+  {d:4, x:40,  y:22,  w:330, h:118},
+  {d:3, x:402, y:22,  w:358, h:118},
+  {d:1, x:40,  y:164, w:330, h:118},
+  {d:2, x:402, y:164, w:358, h:118},
+  {d:0, x:40,  y:306, w:720, h:96},
+];
+
+const SQUEEZE = [
+  {label:"Clean",  mult:1.0,  heat:0,   decay:0},
+  {label:"Firm",   mult:1.45, heat:1,   decay:2},
+  {label:"Brutal", mult:2.0,  heat:2.5, decay:4},
+];
+const LVL_MULT = [1, 1.5, 2.1];
+
+const SAVE_KEY = "familyBusiness.v1";
+
+/* ============================================================
+   STATE
+============================================================ */
+let S = null;
+
+function newState(){
+  return {
+    week:1, cash:3000, respect:0, tier:0, heat:0, strikes:0,
+    capos:0, goons:0, ap:2, apMax:2,
+    jobsRun:0, bribeUsed:false,
+    boomWeeks:0, retaliation:-1, debtWeeks:0,
+    curDistrict:0,
+    rackets:RACKETS.map(()=>0), controlled:[], worthHist:[3000],
+    boss:{name:"Don Corvo", fam:"The Corvo Family", bg:null},
+    skills:{force:0,cunning:0,influence:0,business:0},
+    skillPts:0, perks:[], untouchableUsed:false,
+    safehouse:null, rivalDead:[false,false], freeGoons:0,
+    props: PROPS.map((p,i)=>({
+      id:i, d:p[0], icon:p[1], name:p[2], type:p[3],
+      price:p[4], income:p[5],
+      owner:"market", cond:100, level:1, squeeze:0, closed:0,
+    })),
+    log:[],
+    seenIntro:false, won:false, over:false,
+  };
+}
+
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+function load(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(raw){ S = JSON.parse(raw); normalize(); return true; }
+  }catch(e){}
+  return false;
+}
+function normalize(){ // fill fields added after a save was written
+  S.goons = S.goons||0;
+  S.rackets = S.rackets||RACKETS.map(()=>0);
+  S.controlled = S.controlled||[];
+  S.worthHist = S.worthHist||[];
+  S.boss = S.boss||{name:"Don Corvo", fam:"The Corvo Family", bg:null};
+  S.skills = S.skills||{force:0,cunning:0,influence:0,business:0};
+  S.skillPts = S.skillPts||0;
+  S.perks = S.perks||[];
+  S.untouchableUsed = S.untouchableUsed||false;
+  S.safehouse = S.safehouse||null;
+  if(S.jobsRun===undefined) S.jobsRun = S.jobUsed?1:0;
+  S.rivalDead = S.rivalDead||[false,false];
+  S.freeGoons = S.freeGoons||0;
+}
+
+/* ============================================================
+   HELPERS
+============================================================ */
+const $ = id => document.getElementById(id);
+const fmt = n => "$" + Math.round(n).toLocaleString("en-US");
+const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
+const rnd = (a,b)=>a+Math.random()*(b-a);
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+/* ---- d20 system: roll + skill modifier vs DC ---- */
+function hasPerk(id){ return S.perks.includes(id); }
+function skillMod(key){ return Math.floor((S.skills[key]||0)/2); }
+function check(key, dc, bonus){
+  bonus = bonus||0;
+  let roll = 1+Math.floor(Math.random()*20);
+  if(key==="force" && hasPerk("f3a")) roll = Math.max(roll, 1+Math.floor(Math.random()*20));
+  const mod = skillMod(key)+bonus;
+  const total = roll+mod;
+  return {roll, mod, total, dc, key,
+    crit: roll===20, fumble: roll===1,
+    success: roll!==1 && (roll===20 || total>=dc)};
+}
+function rollLine(r){
+  const s=SKILLS[r.key];
+  return "<div class='rollline'>"+
+    "<span class='die"+(r.crit?" crit":r.fumble?" fumble":"")+"'>"+r.roll+"</span>"+
+    "<span class='math'><b>"+r.roll+"</b> "+(r.mod>=0?"+ "+r.mod:"− "+(-r.mod))+" "+s.icon+" "+s.name+" = <b>"+r.total+"</b> vs DC "+r.dc+"</span>"+
+    "<span class='verdict "+(r.success?"ok":"no")+"'>"+(r.crit?"CRIT!":r.fumble?"FUMBLE":r.success?"SUCCESS":"FAILURE")+"</span>"+
+    "</div>";
+}
+
+function marketPrice(p){
+  let m = p.price * (1 + 0.012*(S.week-1));
+  if(S.tier>=4) m *= 0.9;
+  if(hasPerk("b1a")) m *= 0.9;
+  return Math.round(m);
+}
+function propValue(p){ // what it's worth in your hands
+  return Math.round(p.price * (1 + 0.012*(S.week-1)) * LVL_MULT[p.level-1] * (0.55 + 0.45*p.cond/100));
+}
+function propIncome(p){
+  if(p.closed>0) return 0;
+  let inc = p.income * 1.25 * LVL_MULT[p.level-1] * (0.3 + 0.7*p.cond/100) * SQUEEZE[p.squeeze].mult;
+  if(p.squeeze===2 && hasPerk("f2a")) inc *= 1.2;
+  if(districtControlled(p.d)) inc *= hasPerk("i2b") ? 1.25 : 1.15;
+  if(S.boomWeeks>0) inc *= 1.3;
+  return Math.round(inc);
+}
+function totalIncome(){ return S.props.filter(p=>p.owner==="you").reduce((s,p)=>s+propIncome(p),0); }
+function wages(){ return S.capos * 180; }
+function goonWages(){ return Math.round(Math.max(0, S.goons - S.freeGoons) * 100 * (hasPerk("f2b")?0.5:1)); }
+function goonCap(){ return 2 + S.tier*2 + (S.safehouse?S.safehouse.barracks:0); }
+function goonCost(){ return 250 + S.goons*60; }
+function racketCost(i){ return Math.round(RACKETS[i].base * Math.pow(RACKETS[i].mult, S.rackets[i])); }
+function racketIncome(){ return Math.round(RACKETS.reduce((s,r,i)=>s + r.inc*S.rackets[i], 0) * (hasPerk("b2b")?1.25:1)); }
+function racketHeat(){ return RACKETS.reduce((s,r,i)=>s + r.heat*S.rackets[i], 0); }
+function districtControlled(d){ return S.props.filter(p=>p.d===d).every(p=>p.owner==="you"); }
+function netWorth(){ return Math.round(S.cash + owned().reduce((s,p)=>s+propValue(p),0)); }
+function repairCost(p){ return Math.round((100-p.cond)/100 * p.price * 0.35 * (hasPerk("b2a")?0.7:1)); }
+function upgradeCost(p){ return Math.round(p.price * 0.8 * p.level * (hasPerk("b3b")?0.75:1)); }
+function hireCost(){ return 400 + S.capos*250; }
+function bribeCost(){ return Math.round((300 + S.heat*12 + S.tier*200) * (hasPerk("i1a")?0.75:1)); }
+function shModCost(key){ return Math.round(SAFEHOUSES[S.safehouse.id].cost * 0.6 * (S.safehouse[key]+1)); }
+function jobsPerWeek(){ return hasPerk("c2b")?2:1; }
+function owned(){ return S.props.filter(p=>p.owner==="you"); }
+function jobPayBase(){ return Math.round((350 + S.tier*450) * (S.tier>=3?1.5:1)); }
+
+function addRespect(n){
+  S.respect += n;
+  checkTier();
+}
+function addHeat(n){
+  S.heat = clamp(Math.round((S.heat + n)*10)/10, 0, 100);
+}
+function log(msg, cls){
+  S.log.push({msg, cls:cls||"", w:S.week});
+  if(S.log.length>60) S.log.shift();
+  renderLog();
+}
+function toast(msg, cls){
+  const t = document.createElement("div");
+  t.className = "toast " + (cls||"");
+  t.innerHTML = msg;
+  $("toasts").appendChild(t);
+  setTimeout(()=>t.remove(), 4000);
+}
+
+/* animated cash counter */
+let shownCash = 0;
+function animateCash(){
+  const el = $("cashVal");
+  const target = S.cash;
+  if(shownCash === target){ el.textContent = fmt(target); return; }
+  el.classList.remove("flash-up","flash-down");
+  void el.offsetWidth;
+  el.classList.add(target>shownCash ? "flash-up" : "flash-down");
+  const start = shownCash, t0 = performance.now(), dur = 600;
+  function step(t){
+    const k = Math.min(1,(t-t0)/dur), e = 1-Math.pow(1-k,3);
+    el.textContent = fmt(start + (target-start)*e);
+    if(k<1) requestAnimationFrame(step);
+    else { shownCash = target; setTimeout(()=>el.classList.remove("flash-up","flash-down"), 500); }
+  }
+  requestAnimationFrame(step);
+}
+
+/* ============================================================
+   MODALS (queued)
+============================================================ */
+const modalQueue = [];
+let modalOpen = false;
+
+function showModal(cfg){
+  modalQueue.push(cfg);
+  if(!modalOpen) nextModal();
+}
+function nextModal(){
+  const cfg = modalQueue.shift();
+  if(!cfg){ modalOpen=false; $("overlay").classList.remove("show"); return; }
+  modalOpen = true;
+  const m = $("modal");
+  m.className = "modal"+(cfg.wide?" wide":"");
+  m.innerHTML = "";
+  if(cfg.flare){ const f=document.createElement("div"); f.className="tierflare"; f.textContent=cfg.flare; m.appendChild(f); }
+  if(cfg.kicker){ const k=document.createElement("div"); k.className="kicker"; k.textContent=cfg.kicker; m.appendChild(k); }
+  const h=document.createElement("h2"); h.textContent=cfg.title; m.appendChild(h);
+  const b=document.createElement("div"); b.className="body"; b.innerHTML=cfg.body||""; m.appendChild(b);
+  const ch=document.createElement("div"); ch.className="choices";
+  (cfg.choices||[{label:"Understood"}]).forEach(c=>{
+    const btn=document.createElement("button");
+    btn.className="btn" + (c.primary?" primary":"") + (c.danger?" danger":"");
+    btn.innerHTML=c.label;
+    if(c.disabled) btn.disabled = true;
+    btn.onclick=()=>{ if(c.fn) c.fn(); renderAll(); save(); nextModal(); };
+    ch.appendChild(btn);
+  });
+  m.appendChild(ch);
+  $("overlay").classList.add("show");
+}
+
+/* ============================================================
+   PLAYER ACTIONS
+============================================================ */
+function spendAP(){
+  if(S.ap<=0){ toast("No actions left this week. End the week or hire more capos.","bad"); return false; }
+  S.ap--; return true;
+}
+function needCash(n){
+  if(S.cash<n){ toast("Not enough cash — you need "+fmt(n)+".","bad"); return false; }
+  return true;
+}
+
+function buyProp(id){
+  const p=S.props[id]; if(p.owner!=="market"||S.over) return;
+  const price=marketPrice(p);
+  if(!needCash(price)) return;
+  if(!spendAP()) return;
+  S.cash-=price; p.owner="you"; p.cond=clamp(p.cond,60,100);
+  const rep = 4 + p.d*3;
+  addRespect(rep);
+  log("Bought <b>"+p.name+"</b> for "+fmt(price)+".","gold");
+  toast("🏠 "+p.name+" is now family property. +"+rep+" respect","good");
+  checkControl();
+  afterAction();
+}
+
+function repairProp(id){
+  const p=S.props[id]; if(p.owner!=="you"||S.over) return;
+  const cost=repairCost(p);
+  if(!needCash(cost)) return;
+  if(!spendAP()) return;
+  S.cash-=cost; p.cond=100;
+  log("Fixed up <b>"+p.name+"</b> for "+fmt(cost)+".");
+  afterAction();
+}
+
+function upgradeProp(id){
+  const p=S.props[id]; if(p.owner!=="you"||p.level>=3||S.over) return;
+  const cost=upgradeCost(p);
+  if(!needCash(cost)) return;
+  if(!spendAP()) return;
+  S.cash-=cost; p.level++;
+  addRespect(3);
+  log("Renovated <b>"+p.name+"</b> to level "+p.level+".","gold");
+  toast("✨ "+p.name+" upgraded — income up. +3 respect","good");
+  afterAction();
+}
+
+function sellProp(id){
+  const p=S.props[id]; if(p.owner!=="you"||S.over) return;
+  const price=Math.round(propValue(p)*0.7);
+  showModal({
+    kicker:"Liquidation", title:"Sell "+p.name+"?",
+    body:"A quick sale brings <b>"+fmt(price)+"</b> (70% of its worth). Walking away from a front costs you <b>3 respect</b>.",
+    choices:[
+      {label:"Sell it — "+fmt(price), danger:true, fn:()=>{
+        S.cash+=price; p.owner="market"; p.squeeze=0; p.level=1; p.closed=0;
+        S.respect=Math.max(0,S.respect-3);
+        log("Sold <b>"+p.name+"</b> for "+fmt(price)+".","bad");
+      }},
+      {label:"Keep it", primary:true},
+    ],
+  });
+}
+
+function setSqueeze(id, lvl){
+  const p=S.props[id]; if(p.owner!=="you"||S.over) return;
+  p.squeeze=lvl;
+  renderAll(); save();
+}
+
+function buyoutProp(id){
+  const p=S.props[id]; if(typeof p.owner!=="number"||S.over) return;
+  const r=RIVALS[p.owner];
+  const price=Math.round(marketPrice(p)*1.5);
+  if(!needCash(price)) return;
+  if(!spendAP()) return;
+  S.cash-=price; p.owner="you"; p.squeeze=0;
+  addRespect(8);
+  log("Bought out the "+r.short+"s at <b>"+p.name+"</b> for "+fmt(price)+".","gold");
+  toast("🤝 Clean buyout of "+p.name+". +8 respect","good");
+  checkControl();
+  afterAction();
+}
+
+function muscleProp(id){
+  const p=S.props[id]; if(typeof p.owner!=="number"||S.over) return;
+  const r=RIVALS[p.owner];
+  const price=Math.round(marketPrice(p)*0.85*(hasPerk("f1a")?0.85:1));
+  if(!needCash(price)) return;
+  if(!spendAP()) return;
+  const res=check("force", 12+p.d);
+  S.cash-=price; const prevOwner=p.owner; p.owner="you"; p.squeeze=0;
+  let body;
+  if(res.crit){
+    addRespect(18);
+    body="Your crew walked in, and the "+r.short+"s walked out without a word. The whole street saw who runs things now.\n\n<b>+18 respect, no heat.</b>";
+    log("Took <b>"+p.name+"</b> from the "+r.short+"s without a shot fired.","gold");
+  } else if(res.success){
+    addRespect(14); addHeat(10); p.cond=clamp(p.cond-10,10,100);
+    if(Math.random()<0.2) S.retaliation=prevOwner;
+    body="A few broken chairs and one broken nose later, the "+r.short+"s signed the place over.\n\n<b>+14 respect, +10 heat, condition −10.</b>";
+    log("Muscled the "+r.short+"s out of <b>"+p.name+"</b>.","gold");
+  } else {
+    addRespect(10); addHeat(20); p.cond=clamp(p.cond-30,10,100);
+    S.retaliation=prevOwner;
+    body="It got loud. You hold the deed, but the place is wrecked, the cops took notice — and the "+r.short+"s will remember this.\n\n<b>+10 respect, +20 heat, condition −30, retaliation coming.</b>";
+    log("Took <b>"+p.name+"</b> the messy way. The "+r.short+"s will hit back.","bad");
+  }
+  checkControl();
+  afterAction();
+  showModal({kicker:"Location takeover — "+fmt(price), title:p.icon+" "+p.name, body:rollLine(res)+body,
+    choices:[{label:"It's done", primary:true}]});
+}
+
+function checkControl(){
+  DISTRICTS.forEach((d,i)=>{
+    if(!S.controlled.includes(i) && districtControlled(i)){
+      S.controlled.push(i);
+      addRespect(25);
+      log("The family controls all of <b>"+d.name+"</b>. Income there +15%.","gold");
+      toast("🏆 "+d.name+" is locked down — +25 respect, district income +15%","good");
+    }
+  });
+}
+
+function hireCapo(){
+  if(S.over) return;
+  const max = TIERS[S.tier].capos;
+  if(S.capos>=max){ toast("Your rank only commands "+max+" capo"+(max>1?"s":"")+". Earn more respect.","bad"); return; }
+  const cost=hireCost();
+  if(!needCash(cost)) return;
+  S.cash-=cost; S.capos++;
+  S.apMax = 2 + S.capos; S.ap++; // new capo works this week too
+  log("A new capo kissed the ring. Wages now "+fmt(wages())+"/week.");
+  toast("🤵 Capo hired — +1 action every week.","good");
+  afterAction();
+}
+
+function hireGoon(){
+  if(S.over) return;
+  if(S.goons>=goonCap()){ toast("Your rank can only keep "+goonCap()+" goons on the street. Earn more respect.","bad"); return; }
+  const cost=goonCost();
+  if(!needCash(cost)) return;
+  S.cash-=cost; S.goons++;
+  log("A new goon joined the muscle. Goon wages now "+fmt(goonWages())+"/week.");
+  toast("💪 Goon hired — turf is safer, jobs hit harder.","good");
+  afterAction();
+}
+
+function upgradeRacket(i){
+  if(S.over) return;
+  const r=RACKETS[i];
+  if(S.tier<r.tier){ toast("🔒 The "+r.name+" opens up at rank <b>"+TIERS[r.tier].name+"</b>.","bad"); return; }
+  if(S.rackets[i]>=RACKET_MAX) return;
+  const cost=racketCost(i);
+  if(!needCash(cost)) return;
+  S.cash-=cost; S.rackets[i]++;
+  addRespect(4);
+  log((S.rackets[i]===1?"Started the":"Expanded the")+" <b>"+r.name+"</b> (level "+S.rackets[i]+").","gold");
+  toast(r.icon+" "+r.name+" level "+S.rackets[i]+" — +"+fmt(r.inc)+"/week","good");
+  afterAction();
+}
+
+function runJob(){
+  if(S.over) return;
+  if(S.jobsRun>=jobsPerWeek()){ toast("The crew already ran "+(jobsPerWeek()>1?"its jobs":"a job")+" this week.","bad"); return; }
+  if(!spendAP()) return;
+  S.jobsRun++;
+  const dc = 9 + Math.round(S.heat/12);
+  const res = check("cunning", dc);
+  const critAt = hasPerk("c3a")?18:20;
+  const crit = res.roll>=critAt && res.success;
+  let pay = Math.round(jobPayBase()*rnd(0.8,1.25)*(1+0.08*S.goons)*(hasPerk("c1b")?1.25:1));
+  let body;
+  if(crit){
+    pay*=2; S.cash+=pay; addHeat(4); addRespect(8+S.tier*2);
+    body="Flawless. In, out, and the night watchman never woke up. The fence couldn't believe the haul.\n\n<b>+"+fmt(pay)+" (double take), +"+(8+S.tier*2)+" respect, +4 heat.</b>";
+    log("A perfect job: <b>+"+fmt(pay)+"</b>.","good");
+  } else if(res.success){
+    S.cash+=pay; addHeat(6); addRespect(6+S.tier*2);
+    body="The job came off clean. Handshakes all around, envelopes all the way down.\n\n<b>+"+fmt(pay)+", +"+(6+S.tier*2)+" respect, +6 heat.</b>";
+    log("The job came off clean: <b>+"+fmt(pay)+"</b>.","good");
+  } else {
+    let h=(res.fumble?22:15)+Math.min(8,S.goons);
+    if(hasPerk("c1a")) h=Math.round(h/2);
+    addHeat(h); addRespect(2);
+    body=(res.fumble?"A disaster. Alarms, dogs, a foot chase across two rooftops — everyone got out, barely.":"The job went sideways and the crew scattered into the night.")+"\n\n<b>No score, +"+h+" heat.</b>";
+    log("The job went sideways. <b>+"+h+" heat</b>.","bad");
+  }
+  afterAction();
+  showModal({kicker:"The crew pulls a job — DC "+dc, title:"🎲 The Score", body:rollLine(res)+body,
+    choices:[{label:"Back to business", primary:true}]});
+}
+
+function layLow(){
+  if(S.over) return;
+  if(!spendAP()) return;
+  addHeat(-15);
+  log("The family kept its head down. Heat −15.");
+  toast("🌒 Heat −15.","good");
+  afterAction();
+}
+
+function bribe(){
+  if(S.over) return;
+  if(S.bribeUsed){ toast("City Hall's bagman only comes once a week.","bad"); return; }
+  const cost=bribeCost();
+  if(!needCash(cost)) return;
+  const drop = hasPerk("i1b")?35:30;
+  S.cash-=cost; S.bribeUsed=true; addHeat(-drop);
+  log("An envelope changed hands at City Hall. Heat −"+drop+".");
+  toast("💼 Bribe paid. Heat −"+drop+".","good");
+  afterAction();
+}
+
+function afterAction(){ renderAll(); save(); }
+
+/* ============================================================
+   SAFEHOUSE
+============================================================ */
+function buySafehouse(id){
+  if(S.over) return;
+  const sh=SAFEHOUSES[id];
+  if(S.tier<DISTRICTS[sh.d].tier){ toast("🔒 That safehouse opens up with "+DISTRICTS[sh.d].name+".","bad"); return; }
+  let refund=0;
+  if(S.safehouse) refund=Math.round(S.safehouse.invested*0.6);
+  if(!needCash(sh.cost-refund)) return;
+  if(!spendAP()) return;
+  if(refund>0){
+    S.cash+=refund;
+    log("Sold the old safehouse for "+fmt(refund)+".");
+  }
+  S.cash-=sh.cost;
+  S.safehouse={id, vault:0, barracks:0, lounge:0, invested:sh.cost};
+  S.goons=Math.min(S.goons, goonCap());
+  addRespect(5);
+  log("The family now operates out of the <b>"+sh.name+"</b>.","gold");
+  toast(sh.icon+" New safehouse: "+sh.name+". +5 respect","good");
+  afterAction();
+}
+
+function upgradeSafehouse(key){
+  if(S.over||!S.safehouse) return;
+  if(S.safehouse[key]>=3) return;
+  const cost=shModCost(key);
+  if(!needCash(cost)) return;
+  S.cash-=cost; S.safehouse[key]++; S.safehouse.invested+=cost;
+  const m=SH_MODS.find(m=>m.key===key);
+  log("Upgraded the safehouse "+m.name.toLowerCase()+" to level "+S.safehouse[key]+".","gold");
+  toast(m.icon+" "+m.name+" level "+S.safehouse[key],"good");
+  afterAction();
+}
+
+/* ============================================================
+   DISTRICT TAKEOVER
+============================================================ */
+function districtTakeoverInfo(d){
+  const targets=S.props.filter(p=>p.d===d && p.owner!=="you");
+  const rivalCount=targets.filter(p=>typeof p.owner==="number").length;
+  const cost=Math.round(targets.reduce((s,p)=>s+marketPrice(p),0)*1.15);
+  return {targets, rivalCount, cost, dc:12+2*rivalCount};
+}
+function canTakeoverDistrict(d){
+  if(S.tier<DISTRICTS[d].tier) return false;
+  const mine=S.props.filter(p=>p.d===d&&p.owner==="you").length;
+  return mine>=3 && mine<5;
+}
+function promptDistrictTakeover(d){
+  if(S.over||!canTakeoverDistrict(d)) return;
+  const info=districtTakeoverInfo(d);
+  showModal({
+    kicker:"District takeover — Force check, DC "+info.dc,
+    title:"⚔️ Take "+DISTRICTS[d].name,
+    body:"You hold most of the district. One coordinated night — every crew, every goon — and the rest of it folds: <b>"+info.targets.length+" properties</b>"+
+      (info.rivalCount?" ("+info.rivalCount+" held by rivals)":"")+".\n\n"+
+      "<b>Cost: "+fmt(info.cost)+" and 1 action.</b>\nSucceed and it's all yours in one stroke. Fail and you lose a third of the money, the city burns hot, and the rivals come for blood.",
+    choices:[
+      {label:"Give the order — "+fmt(info.cost), danger:true, disabled:S.cash<info.cost||S.ap<=0, fn:()=>resolveDistrictTakeover(d)},
+      {label:"Not tonight", primary:true},
+    ],
+  });
+}
+function resolveDistrictTakeover(d){
+  const info=districtTakeoverInfo(d);
+  if(S.cash<info.cost||S.ap<=0) return;
+  S.ap--;
+  const res=check("force", info.dc);
+  let body;
+  if(res.success){
+    S.cash-=info.cost;
+    const rivalsHit=[...new Set(info.targets.filter(p=>typeof p.owner==="number").map(p=>p.owner))];
+    info.targets.forEach(p=>{ p.owner="you"; p.squeeze=0; p.cond=clamp(p.cond-(res.crit?0:10),10,100); });
+    addRespect(30); addHeat(res.crit?10:20);
+    if(!res.crit && rivalsHit.length && Math.random()<0.4) S.retaliation=pick(rivalsHit);
+    body=(res.crit
+      ? "By sunrise it was over before it started — doors opened, hands shook, nobody bled. The district woke up under new management."
+      : "A long, loud night. By morning every holdout had signed and every rival crew had cleared out.")+
+      "\n\n<b>"+DISTRICTS[d].name+" is yours. +30 respect, +"+(res.crit?10:20)+" heat.</b>";
+    log("<b>"+DISTRICTS[d].name+"</b> taken in one night.","gold");
+  } else {
+    const lost=Math.round(info.cost/3);
+    S.cash-=lost; addHeat(25);
+    const rivalsHit=[...new Set(info.targets.filter(p=>typeof p.owner==="number").map(p=>p.owner))];
+    if(rivalsHit.length) S.retaliation=pick(rivalsHit);
+    body="Somebody talked. Half the crews walked into waiting fists and flashbulbs; the night collapsed before midnight.\n\n<b>Lost "+fmt(lost)+", +25 heat, and the rivals are coming.</b>";
+    log("The takeover of "+DISTRICTS[d].name+" fell apart.","bad");
+  }
+  checkControl();
+  renderAll(); save();
+  showModal({kicker:"District takeover", title:"⚔️ "+DISTRICTS[d].name, body:rollLine(res)+body,
+    choices:[{label:res.success?"The district is ours":"Regroup", primary:true}]});
+}
+
+/* ============================================================
+   RIVAL ELIMINATION — the hit on the Don
+============================================================ */
+function hitCost(){ return 2000 + S.tier*1000; }
+function canOrderHit(rid){ return !S.rivalDead[rid] && rivalHoldings(rid).length===0 && S.week>=3; }
+function promptHit(rid){
+  if(S.over||!canOrderHit(rid)) return;
+  const r=RIVALS[rid];
+  showModal({
+    kicker:"Order the hit — Force check, DC 15",
+    title:"🎯 End "+r.name,
+    body:"The "+r.short+"s hold nothing now — no fronts, no friends, just a Don with bodyguards and a grudge. One clean hit and the family dissolves; the survivors will kiss your ring or leave town.\n\n"+
+      "<b>Cost: "+fmt(hitCost())+" and 1 action.</b>\nFail, and the hit makes the papers — and gives them a martyr to rally to.",
+    choices:[
+      {label:"Make the call — "+fmt(hitCost()), danger:true, disabled:S.cash<hitCost()||S.ap<=0, fn:()=>resolveHit(rid)},
+      {label:"Let them rot", primary:true},
+    ],
+  });
+}
+function resolveHit(rid){
+  if(S.cash<hitCost()||S.ap<=0) return;
+  const r=RIVALS[rid];
+  S.cash-=hitCost(); S.ap--;
+  const res=check("force", 15);
+  let body;
+  if(res.success){
+    S.rivalDead[rid]=true;
+    addRespect(50); addHeat(res.crit?8:18);
+    body=(res.crit
+      ? "It never even made the papers. The Don of the "+r.short+"s simply... retired, somewhere warm, and his capos came to you one by one."
+      : "Two shots in a barber's chair. By the funeral, half their soldiers were wearing your colors.")+
+      "\n\n<b>"+r.name+" is no more. +50 respect, +"+(res.crit?8:18)+" heat.</b>";
+    log("<b>"+r.name+"</b> has been wiped off the map.","gold");
+    if(S.rivalDead.every(x=>x)){
+      showModal({flare:"🏆", kicker:"The city has one family now", title:"Last Family Standing",
+        body:"The Morettis and the Volkovs are history. Every racket, every corner, every favor in this city flows through one desk — yours.\n\n<b>+40 respect. No rival will ever buy another brick here.</b>",
+        choices:[{label:"As it should be", primary:true, fn:()=>addRespect(40)}]});
+    }
+  } else {
+    addHeat(22);
+    const comeback=S.props.filter(p=>p.owner==="market" && S.tier>=DISTRICTS[p.d].tier-1).slice(0,2);
+    comeback.forEach(p=>p.owner=rid);
+    body="The shooter missed. The Don of the "+r.short+"s stood up, dusted off his coat, and bought two buildings the next morning just to make a point.\n\n<b>+22 heat. The "+r.short+"s are back — angrier.</b>";
+    S.retaliation=rid;
+    log("The hit on the "+r.short+"s failed. They're back.","bad");
+  }
+  renderAll(); save();
+  showModal({kicker:"The hit", title:"🎯 "+r.name, body:rollLine(res)+body,
+    choices:[{label:res.success?"It's settled":"Damn it", primary:true}]});
+}
+
+/* ============================================================
+   CHARACTER SHEET (skills & perks)
+============================================================ */
+function bumpSkill(key){
+  if(S.skillPts<=0||S.skills[key]>=10) return;
+  S.skillPts--; S.skills[key]++;
+  save(); renderSheet(); renderTop();
+}
+function choosePerk(id){
+  // find which slot this perk belongs to and validate
+  for(const key of SKILL_KEYS){
+    SKILLS[key].perks.forEach((pair,t)=>{
+      pair.forEach(p=>{
+        if(p.id===id && S.skills[key]>=PERK_AT[t] && !pair.some(q=>S.perks.includes(q.id))){
+          S.perks.push(id);
+          log("Learned <b>"+p.name+"</b>.","gold");
+        }
+      });
+    });
+  }
+  save(); renderSheet(); renderAll();
+}
+function sheetHtml(){
+  let h="";
+  SKILL_KEYS.forEach(key=>{
+    const sk=SKILLS[key], lvl=S.skills[key];
+    h+="<div class='skillrow'>"+
+      "<span class='ic'>"+sk.icon+"</span>"+
+      "<span class='meta'><span class='t'>"+sk.name+"</span><br><span class='d'>"+sk.desc+"</span></span>"+
+      "<span class='pips'>"+Array.from({length:10},(_,i)=>"<i class='"+(lvl>i?"on":"")+"'></i>").join("")+"</span>"+
+      "<span class='mod'>+"+skillMod(key)+"</span>"+
+      "<button class='bump' onclick='bumpSkill(\""+key+"\")' "+(S.skillPts<=0||lvl>=10?"disabled":"")+">+</button>"+
+      "</div>";
+    sk.perks.forEach((pair,t)=>{
+      const chosen=pair.find(p=>S.perks.includes(p.id));
+      const unlocked=lvl>=PERK_AT[t];
+      if(chosen){
+        h+="<div class='perkpick'><div class='perk chosen'><span class='pn'>★ "+chosen.name+"</span><br><span class='pd'>"+chosen.desc+"</span></div></div>";
+      } else if(unlocked){
+        h+="<div class='perkpick'>"+pair.map(p=>
+          "<button class='perk' onclick='choosePerk(\""+p.id+"\")'><span class='pn'>"+p.name+"</span><br><span class='pd'>"+p.desc+"</span></button>"
+        ).join("")+"</div>";
+      } else if(t===0||lvl>=PERK_AT[t-1]){
+        h+="<div class='perkpick'><div class='perk lockedp'><span class='pn'>🔒 Perk choice at "+sk.name+" "+PERK_AT[t]+"</span></div></div>";
+      }
+    });
+  });
+  return h;
+}
+function renderSheet(){
+  const el=$("sheetBody");
+  if(el) el.innerHTML="<div class='ptsleft'>"+(S.skillPts>0?S.skillPts+" skill point"+(S.skillPts>1?"s":"")+" to spend":"No skill points — rank up to earn more")+"</div>"+sheetHtml();
+}
+function showSheet(){
+  const bg=BACKGROUNDS.find(b=>b.id===S.boss.bg);
+  showModal({
+    kicker:S.boss.fam+(bg?" — "+bg.name:""), title:"👤 "+S.boss.name,
+    body:"<div id='sheetBody'></div>",
+    wide:true,
+    choices:[{label:"Close", primary:true}],
+  });
+  renderSheet();
+}
+
+/* ============================================================
+   CHARACTER CREATION
+============================================================ */
+const CC={name:"",fam:"",bg:null,pts:5,alloc:{force:0,cunning:0,influence:0,business:0}};
+function ccStep1(){
+  modalOpen=true;
+  $("overlay").classList.add("show");
+  $("modal").innerHTML=
+    "<div class='kicker'>New game — found your family</div>"+
+    "<h2>Who Takes the Chair?</h2>"+
+    "<div class='body'>The old Don is dead. Somebody has to sit at the head of the table.</div>"+
+    "<input class='cc-input' id='ccName' maxlength='24' placeholder='Your name (e.g. Don Corvo)' value='Don Corvo'>"+
+    "<input class='cc-input' id='ccFam' maxlength='28' placeholder='Family name (e.g. The Corvo Family)' value='The Corvo Family'>"+
+    "<div class='body' style='margin-top:6px'><b>Where did you come from?</b></div>"+
+    "<div class='bgpick'>"+BACKGROUNDS.map(b=>
+      "<button class='bgcard' onclick='ccPickBg(\""+b.id+"\")'><div class='bt'>"+b.icon+" "+b.name+"</div>"+
+      "<div class='bd'>"+b.desc+"</div><div class='bb'>+2 "+SKILLS[b.skill].name+" · "+b.bonus+"</div></button>"
+    ).join("")+"</div>";
+}
+function ccPickBg(id){
+  CC.name=($("ccName").value.trim()||"Don Corvo");
+  CC.fam=($("ccFam").value.trim()||"The Corvo Family");
+  CC.bg=id;
+  CC.pts=5; SKILL_KEYS.forEach(k=>CC.alloc[k]=0);
+  ccStep2();
+}
+function ccStep2(){
+  const bg=BACKGROUNDS.find(b=>b.id===CC.bg);
+  $("modal").innerHTML=
+    "<div class='kicker'>New game — "+bg.name+"</div>"+
+    "<h2>What Are You Made Of?</h2>"+
+    "<div class='body'>Spread <b>5 points</b> across your skills. Every 2 levels is +1 on the d20 rolls that decide jobs, takeovers and tight spots. ("+bg.name+" adds +2 "+SKILLS[bg.skill].name+" on top.)</div>"+
+    "<div class='ptsleft' id='ccPts'></div>"+
+    "<div id='ccRows'></div>"+
+    "<div class='choices' style='margin-top:14px'><button class='btn primary' id='ccGo' onclick='ccFinish()'>Take the chair</button></div>";
+  ccRender();
+}
+function ccRender(){
+  const bg=BACKGROUNDS.find(b=>b.id===CC.bg);
+  $("ccPts").textContent=CC.pts+" point"+(CC.pts===1?"":"s")+" left";
+  $("ccRows").innerHTML=SKILL_KEYS.map(k=>{
+    const sk=SKILLS[k];
+    const base=(bg.skill===k?2:0), lvl=base+CC.alloc[k];
+    return "<div class='skillrow'>"+
+      "<span class='ic'>"+sk.icon+"</span>"+
+      "<span class='meta'><span class='t'>"+sk.name+(base?" <span style='color:var(--gold)'>(+2)</span>":"")+"</span><br><span class='d'>"+sk.desc+"</span></span>"+
+      "<span class='pips'>"+Array.from({length:10},(_,i)=>"<i class='"+(lvl>i?"on":"")+"'></i>").join("")+"</span>"+
+      "<span class='mod'>+"+Math.floor(lvl/2)+"</span>"+
+      "<button class='bump' onclick='ccAdj(\""+k+"\",-1)' "+(CC.alloc[k]<=0?"disabled":"")+">−</button>"+
+      "<button class='bump' onclick='ccAdj(\""+k+"\",1)' "+(CC.pts<=0?"disabled":"")+">+</button>"+
+      "</div>";
+  }).join("");
+}
+function ccAdj(k,d){
+  if(d>0 && CC.pts>0){ CC.alloc[k]++; CC.pts--; }
+  if(d<0 && CC.alloc[k]>0){ CC.alloc[k]--; CC.pts++; }
+  ccRender();
+}
+function ccFinish(){
+  const bg=BACKGROUNDS.find(b=>b.id===CC.bg);
+  S.boss={name:CC.name, fam:CC.fam, bg:CC.bg};
+  SKILL_KEYS.forEach(k=>S.skills[k]=CC.alloc[k]+(bg.skill===k?2:0));
+  S.skillPts=CC.pts;
+  if(CC.bg==="enforcer"){ S.goons=2; S.freeGoons=2; }
+  if(CC.bg==="grifter") S.cash+=1000;
+  if(CC.bg==="diplomat") S.respect=20;
+  if(CC.bg==="bookkeeper") S.rackets[0]=1;
+  modalOpen=false; $("overlay").classList.remove("show");
+  save(); renderAll();
+  showIntro();
+}
+
+/* ============================================================
+   TIERS
+============================================================ */
+function checkTier(){
+  while(S.tier<TIERS.length-1 && S.respect>=TIERS[S.tier+1].need){
+    S.tier++;
+    const t=TIERS[S.tier];
+    S.apMax = 2 + S.capos;
+    S.skillPts += 2;
+    log("The family rises: you are now <b>"+t.name+"</b>. +2 skill points.","gold");
+    if(S.tier===TIERS.length-1 && !S.won){
+      S.won=true;
+      showModal({
+        flare:"👑", kicker:"Victory", title:"Don of the City",
+        body:"Week "+S.week+". Every district pays tribute, every door opens before you knock. The city is yours.\n\nYou built it from "+fmt(3000)+" and a pawn shop on the docks. Keep playing if you like — empires still need running.",
+        choices:[{label:"The city is mine", primary:true}],
+      });
+    } else {
+      showModal({
+        flare:"🥃", kicker:"Promotion", title:"You are now "+t.name,
+        body:t.perk+"\n\n<b>+2 skill points</b> — spend them on the Boss screen (👤).",
+        choices:[{label:"Salute", primary:true}],
+      });
+    }
+  }
+}
+
+/* ============================================================
+   RIVALS
+============================================================ */
+function rivalHoldings(rid){ return S.props.filter(p=>p.owner===rid); }
+
+function rivalTurn(report){
+  if(S.week<3) return;
+  RIVALS.forEach(r=>{
+    if(S.rivalDead[r.id]) return;
+    if(rivalHoldings(r.id).length>=5) return; // even greed has a ceiling
+    let chance = clamp(0.22 + S.week*0.004, 0, 0.5);
+    if(hasPerk("f3b")) chance *= 0.7;
+    if(Math.random()>chance) return;
+    // rivals shop in districts up to one above your tier — and take the best stock first
+    const maxD = Math.min(4, S.tier+1);
+    const targets = S.props.filter(p=>p.owner==="market" && p.d<=maxD);
+    if(!targets.length) return;
+    targets.sort((a,b)=>marketPrice(b)-marketPrice(a));
+    const t = targets[Math.floor(Math.random()*Math.min(3,targets.length))];
+    t.owner = r.id;
+    report.push("🕴️ The <b>"+r.short+"s</b> took over "+t.name+" in "+DISTRICTS[t.d].name+".");
+    log("The "+r.short+"s claimed <b>"+t.name+"</b>.","bad");
+  });
+  // strong rivals make plays for YOUR turf (defended by Force + goons)
+  RIVALS.forEach(r=>{
+    if(S.rivalDead[r.id]) return;
+    const mine=owned();
+    if(rivalHoldings(r.id).length>=4 && mine.length>=4 && Math.random()<0.08){
+      const target=mine.slice().sort((a,b)=>a.cond-b.cond)[0];
+      const res=check("force", 11, Math.floor(S.goons*0.75)+(S.safehouse?S.safehouse.barracks:0));
+      if(res.success){
+        addRespect(6);
+        report.push("🛡️ The <b>"+r.short+"s</b> made a play for "+target.name+" — your crew held the door. <i>(d20: "+res.roll+"+"+res.mod+"="+res.total+" vs "+res.dc+")</i> +6 respect.");
+        log("Held <b>"+target.name+"</b> against the "+r.short+"s.","good");
+      } else {
+        target.owner=r.id; target.squeeze=0;
+        report.push("⚔️ The <b>"+r.short+"s</b> took <b>"+target.name+"</b> from you at gunpoint. <i>(d20: "+res.roll+"+"+res.mod+"="+res.total+" vs "+res.dc+")</i> Take it back — or take their Don.");
+        log("Lost <b>"+target.name+"</b> to the "+r.short+"s!","bad");
+      }
+    }
+  });
+
+  // retaliation for muscling
+  if(S.retaliation>=0 && S.rivalDead[S.retaliation]){ S.retaliation=-1; }
+  if(S.retaliation>=0){
+    const r=RIVALS[S.retaliation]; S.retaliation=-1;
+    const mine=owned();
+    if(mine.length){
+      if(Math.random() < Math.min(0.8, S.goons*0.2 + (hasPerk("f1b")?0.15:0))){
+        report.push("💪 The <b>"+r.short+"s</b> came for payback — your goons turned them away at the door.");
+        log("Your goons stopped a "+r.short+" hit.","good");
+      } else {
+        const t=pick(mine);
+        const dmg = Math.max(10, 30 - S.goons*3);
+        t.cond=clamp(t.cond-dmg,5,100);
+        report.push("🔥 The <b>"+r.short+"s</b> hit back — thugs wrecked "+t.name+" (condition −"+dmg+").");
+        log("The "+r.short+"s trashed <b>"+t.name+"</b> in retaliation.","bad");
+      }
+    }
+  }
+}
+
+/* ============================================================
+   EVENTS
+============================================================ */
+function pickEvent(){
+  const mine=owned();
+  const pool=[];
+  const add=(w,fn)=>{ if(w>0) pool.push({w,fn}); };
+
+  add(10, ()=>{ // lucky find
+    const amt=Math.round(rnd(150,400)*(1+S.tier*0.5));
+    S.cash+=amt;
+    return {kicker:"Street Event", title:"A Debt Repaid", body:"An old gambling debt finally lands on your desk, with interest.\n\n<b>+"+fmt(amt)+"</b>"};
+  });
+  add(mine.length?12:0, ()=>{ // fire
+    const t=pick(mine); t.cond=clamp(t.cond-35,5,100);
+    return {kicker:"Street Event", title:"Fire at "+t.name, body:"Bad wiring — or so the fire marshal wrote down. Either way, half the place is ash.\n\n<b>"+t.name+": condition −35</b>"};
+  });
+  add(8, ()=>{ // boom
+    S.boomWeeks=2;
+    return {kicker:"Street Event", title:"Money Flows Downtown", body:"A convention crowd hits the city flush with cash.\n\n<b>All income +30% for the next 2 weeks.</b>"};
+  });
+  add(mine.length?10:0, ()=>{ // cold snap
+    mine.forEach(p=>p.cond=clamp(p.cond-8,5,100));
+    return {kicker:"Street Event", title:"A Brutal Winter Week", body:"Burst pipes and cracked windows across every property you hold.\n\n<b>All your properties: condition −8</b>"};
+  });
+  add(12, ()=>{ // cop shakedown — choice w/ Influence check
+    const ask=Math.round(200+S.tier*250);
+    return {kicker:"Decision", title:"A Detective Comes Calling",
+      body:"Detective Marsh slides into the booth across from you. “Nice little operation. Be a shame if I got curious.” He wants <b>"+fmt(ask)+"</b>.",
+      choices:[
+        {label:"Pay him off — "+fmt(ask), fn:()=>{ if(S.cash>=ask){S.cash-=ask; log("Paid off Detective Marsh.");} else {addHeat(12); log("Couldn't cover Marsh's price. +12 heat","bad");} }},
+        {label:"🎲 Talk him around (Influence, DC 13)", fn:()=>{
+          const res=check("influence",13);
+          if(res.success){ addRespect(5); log("Talked Detective Marsh into a friendly arrangement. +5 respect","gold"); }
+          else { addHeat(15); log("Marsh didn't like your tone. +15 heat","bad"); }
+          showModal({kicker:"Influence check", title:"Detective Marsh", body:rollLine(res)+(res.success
+            ? "By the second espresso he's laughing at your jokes and picking up the check. He'll wave off the curious — gratis."
+            : "He stands up mid-sentence. “Cute. I'll be seeing you.” You will, in fact, be seeing him.\n\n<b>+15 heat</b>"),
+            choices:[{label:"Noted", primary:true}]});
+        }},
+        {label:"Throw him out (+12 heat)", danger:true, fn:()=>{ addHeat(12); addRespect(4); log("Sent Detective Marsh packing. +4 respect, +12 heat"); }},
+      ]};
+  });
+  add(8, ()=>{ // informant — choice w/ Force check
+    const ask=400+S.tier*150;
+    return {kicker:"Decision", title:"A Rat in the Walls",
+      body:"One of your runners has been talking to the Feds. Your consigliere can make it a misunderstanding — for <b>"+fmt(ask)+"</b> in lawyers and favors. Or you handle it the old way.",
+      choices:[
+        {label:"Lawyers and favors — "+fmt(ask), fn:()=>{ if(S.cash>=ask){S.cash-=ask; log("The rat recanted. Expensive, but quiet.");} else {addHeat(10); log("No cash for lawyers — the rat talked. +10 heat","bad");} }},
+        {label:"🎲 The old way (Force, DC 12)", danger:true, fn:()=>{
+          const res=check("force",12);
+          if(res.success){ addHeat(5); addRespect(10); log("The rat won't be talking. The street took notice. +10 respect","gold"); }
+          else { addHeat(16); log("The rat saw it coming and ran straight to the Feds. +16 heat","bad"); }
+          showModal({kicker:"Force check", title:"The Rat", body:rollLine(res)+(res.success
+            ? "Quiet, professional, final. The street hears just enough to learn the lesson.\n\n<b>+10 respect, +5 heat</b>"
+            : "He was already wearing a wire when your boys arrived — and faster than he looked.\n\n<b>+16 heat</b>"),
+            choices:[{label:"Noted", primary:true}]});
+        }},
+      ]};
+  });
+  add(S.safehouse && (S.heat>40 || S.props.some(p=>typeof p.owner==="number")) ? 8 : 0, ()=>{ // safehouse assault — auto defense roll
+    const sh=SAFEHOUSES[S.safehouse.id];
+    const livingRivals=RIVALS.filter(r=>!S.rivalDead[r.id]);
+    const r=livingRivals.length?pick(livingRivals):null;
+    const who=r?("the "+r.short+"s"):"masked men nobody claims";
+    const bonus=S.safehouse.barracks+Math.floor(S.goons/2);
+    const res=check("force",13,bonus);
+    let out;
+    if(res.success){
+      addRespect(10);
+      out="Your goons were waiting at the door"+(S.safehouse.barracks?" — the barracks paid for itself":"")+". The attackers left in a hurry, two of them sideways.\n\n<b>Held the safehouse. +10 respect.</b>";
+      log("Defended the "+sh.name+" from "+who+". +10 respect","good");
+    } else {
+      const loss=Math.max(400, Math.round(Math.max(0,S.cash)*0.08));
+      S.cash-=loss; if(S.goons>0)S.goons--;
+      out="They came in through the back and turned the place over before your crew rallied.\n\n<b>Lost "+fmt(loss)+(S.goons>=0?" and a goon":"")+".</b>";
+      log("The "+sh.name+" was hit by "+who+". −"+fmt(loss),"bad");
+    }
+    return {kicker:"Assault — Force +"+bonus+" defense, DC 13", title:"⚔️ Assault on the "+sh.name,
+      body:"In the small hours, "+who+" come over the wall.\n"+rollLine(res)+out};
+  });
+  add(4, ()=>{ // mentor — skill point
+    S.skillPts++;
+    return {kicker:"Street Event", title:"An Old Hand's Advice",
+      body:"A retired consigliere — friend of the old Don — corners you at a wake and talks for two hours. You only needed ten minutes of it.\n\n<b>+1 skill point.</b> Spend it on the Boss screen (👤)."};
+  });
+  add(8, ()=>{ // old friend — choice
+    return {kicker:"Decision", title:"An Old Friend Needs Help",
+      body:"Sal from the neighborhood is behind with the Morettis. <b>$500</b> squares him away — and the neighborhood remembers who helped.",
+      choices:[
+        {label:"Cover him — $500, +8 respect", fn:()=>{ if(S.cash>=500){S.cash-=500; addRespect(8); log("Squared Sal's debt. The neighborhood remembers.","gold");} else { log("You couldn't cover Sal. Word gets around.","bad"); S.respect=Math.max(0,S.respect-2);} }},
+        {label:"Not your problem", fn:()=>{ S.respect=Math.max(0,S.respect-2); log("Sal's on his own. −2 respect"); }},
+      ]};
+  });
+  add(S.heat>55 && mine.length ? 16 : 0, ()=>{ // raid
+    const t=pick(mine); t.closed=2;
+    const fine=Math.round(200+S.heat*8);
+    S.cash-=fine;
+    return {kicker:"Police", title:"Raid on "+t.name,
+      body:"Squad cars at the curb, tape on the doors. With heat this high, they didn't need much of an excuse.\n\n<b>"+t.name+" closed for 2 weeks. Fine: "+fmt(fine)+"</b>"};
+  });
+  add(S.goons>0?8:0, ()=>{ // goon pinched — choice
+    return {kicker:"Decision", title:"A Goon Gets Pinched",
+      body:"One of your boys got grabbed by a beat cop with ambitions. The lawyer can spring him for <b>$450</b> — before he gets chatty in there.",
+      choices:[
+        {label:"Pay the lawyer — $450", fn:()=>{ if(S.cash>=450){S.cash-=450; log("Sprung your goon. He owes you one.");} else {S.goons=Math.max(0,S.goons-1); addHeat(8); log("No bail money — he sat, and he talked. −1 goon, +8 heat","bad");} }},
+        {label:"Cut him loose (−1 goon)", danger:true, fn:()=>{ S.goons=Math.max(0,S.goons-1); if(Math.random()<0.3){addHeat(8); log("The goon talked. +8 heat","bad");} else log("He kept his mouth shut. Stand-up guy."); }},
+      ]};
+  });
+  add(mine.some(p=>p.squeeze===2)?Math.max(2,10-S.goons*2):0, ()=>{ // squeeze backlash (goons deter it)
+    const t=pick(mine.filter(p=>p.squeeze===2));
+    t.cond=clamp(t.cond-20,5,100);
+    return {kicker:"Street Event", title:"Backlash at "+t.name,
+      body:"You squeeze a place hard enough, somebody throws a brick. The shopkeeper's nephew did more than that.\n\n<b>"+t.name+": condition −20</b>"};
+  });
+
+  if(!pool.length) return null;
+  const total=pool.reduce((s,e)=>s+e.w,0);
+  let roll=Math.random()*total;
+  for(const e of pool){ roll-=e.w; if(roll<=0) return e.fn; }
+  return pool[pool.length-1].fn;
+}
+
+/* ============================================================
+   END TURN
+============================================================ */
+function endTurn(){
+  if(S.over || modalOpen) return;
+  const report=[];
+
+  // 1) income
+  let income=0;
+  owned().forEach(p=>{
+    const inc=propIncome(p);
+    income+=inc;
+    if(inc>0) floatCash(p.id, inc);
+  });
+  const rInc=racketIncome();
+  const w=wages(), gw=goonWages();
+  S.cash += income + rInc - w - gw;
+  if(income>0) report.push("💰 The properties brought in <b>"+fmt(income)+"</b>.");
+  if(rInc>0) report.push("🎟️ The rackets kicked up <b>"+fmt(rInc)+"</b>.");
+  if(hasPerk("i3a")){
+    const nCtrl=DISTRICTS.filter((d,i)=>districtControlled(i)).length;
+    if(nCtrl>0){ S.cash+=nCtrl*300; report.push("🏛️ City contracts paid <b>"+fmt(nCtrl*300)+"</b> ("+nCtrl+" controlled district"+(nCtrl>1?"s":"")+")."); }
+  }
+  if(hasPerk("b3a") && S.cash>0){
+    const interest=Math.min(2000, Math.round(S.cash*0.01));
+    S.cash+=interest; report.push("🏦 Compound interest: <b>+"+fmt(interest)+"</b>.");
+  }
+  if(hasPerk("i2a")){ addRespect(2); }
+  const tribute=DISTRICTS.filter((d,i)=>districtControlled(i)).length*2;
+  if(tribute>0){ addRespect(tribute); report.push("👑 Tribute from your districts: <b>+"+tribute+" respect</b>."); }
+  if(w+gw>0) report.push("🤵 Crew wages: <b>−"+fmt(w+gw)+"</b>"+(gw>0?" ("+fmt(w)+" capos, "+fmt(gw)+" goons)":"")+".");
+  if(income===0 && owned().length===0) report.push("You hold no property yet. Buy a front — that's where the money lives.");
+
+  // 2) decay & closures
+  const decayCut = hasPerk("b1b")?1:0;
+  owned().forEach(p=>{
+    p.cond=clamp(p.cond-Math.max(0.5, 2+SQUEEZE[p.squeeze].decay+rnd(0,2)-decayCut),0,100);
+    if(p.closed>0) p.closed--;
+  });
+
+  // 3) heat from squeezing, rackets, goons + cooling
+  let squeezeHeat=0;
+  owned().forEach(p=>squeezeHeat+=SQUEEZE[p.squeeze].heat);
+  const ambient = racketHeat() + S.goons*0.3;
+  const cool = 4 + (S.tier>=2?4:0) + (S.safehouse?S.safehouse.lounge:0) + (hasPerk("c2a")?2:0);
+  addHeat(squeezeHeat+ambient-cool);
+  if(squeezeHeat+ambient>0.5) report.push("🔥 Squeezing, rackets and muscle drew <b>+"+Math.round(squeezeHeat+ambient)+" heat</b> (cooled −"+cool+").");
+
+  // 4) rivals
+  rivalTurn(report);
+
+  // 5) boom decay
+  if(S.boomWeeks>0) S.boomWeeks--;
+
+  // 6) crackdown check
+  if(S.heat>=100){
+    let seizeMult=0.25;
+    if(S.safehouse) seizeMult*=(1-0.25*S.safehouse.vault);
+    if(hasPerk("c3b")) seizeMult*=0.5;
+    const seize=Math.round(Math.max(0,S.cash)*seizeMult);
+    S.cash-=seize;
+    const mine=owned().sort((a,b)=>propIncome(b)-propIncome(a));
+    let closedName="";
+    if(mine.length){ mine[0].closed=3; closedName=mine[0].name; }
+    S.heat=55;
+    let goonLoss="";
+    if(S.goons>0){ S.goons--; goonLoss=", one goon took the fall"; }
+    let strikeLine;
+    if(hasPerk("i3b") && !S.untouchableUsed){
+      S.untouchableUsed=true;
+      strikeLine="Your friends downtown made the case <b>disappear — no strike</b>.";
+    } else {
+      S.strikes++;
+      strikeLine="Strike <b>"+S.strikes+" of 3</b>.";
+      log("Crackdown! Strike "+S.strikes+" of 3.","bad");
+    }
+    report.push("🚔 <b>CRACKDOWN.</b> The city came down hard: "+fmt(seize)+" seized"+(closedName?", "+closedName+" shuttered for 3 weeks":"")+goonLoss+". "+strikeLine);
+    if(S.strikes>=3){ gameOver("rico"); return; }
+  }
+
+  // 7) debt spiral
+  if(S.cash<0){
+    S.cash=Math.round(S.cash*1.10);
+    report.push("🦈 You're into the loan sharks for <b>"+fmt(-S.cash)+"</b> (10% weekly juice). Sell something or earn, fast.");
+    if(S.cash<-5000){ gameOver("debt"); return; }
+  }
+
+  // 8) advance
+  S.week++;
+  S.ap=S.apMax;
+  S.jobsRun=0; S.bribeUsed=false;
+  S.worthHist.push(netWorth());
+  if(S.worthHist.length>60) S.worthHist.shift();
+
+  // 9) event (after report)
+  const evFn = Math.random()<0.55 ? pickEvent() : null;
+
+  renderAll(); save();
+
+  showModal({
+    kicker:"Week "+(S.week-1)+" closes", title:"The Weekly Take",
+    body:"<div>"+report.map(r=>"<div class='rep-row'><span>"+r+"</span></div>").join("")+"</div>",
+    choices:[{label:"On to week "+S.week, primary:true}],
+  });
+  if(evFn){
+    const ev=evFn();
+    if(ev) showModal({kicker:ev.kicker,title:ev.title,body:ev.body,choices:ev.choices||[{label:"So it goes",primary:true}]});
+  }
+}
+
+function floatCash(propId, amt){
+  const card=document.querySelector('[data-prop="'+propId+'"]');
+  if(!card) return;
+  const f=document.createElement("div");
+  f.className="float-cash"; f.textContent="+"+fmt(amt);
+  card.appendChild(f);
+  setTimeout(()=>f.remove(),1500);
+}
+
+function gameOver(kind){
+  S.over=true;
+  renderAll(); save();
+  const stats="\n\nYou lasted <b>"+S.week+" weeks</b>, reached the rank of <b>"+TIERS[S.tier].name+"</b>, and held <b>"+owned().length+" properties</b>.";
+  const cfg = kind==="rico"
+    ? {flare:"⚖️", kicker:"Game Over", title:"The RICO Case Lands",
+       body:"Three strikes was all the federal prosecutor needed. The vans arrive at dawn; the papers run your photo above the fold."+stats}
+    : {flare:"🦈", kicker:"Game Over", title:"The Sharks Collect",
+       body:"Five grand in the hole and nothing left to sell. There are debts in this city you don't walk away from."+stats};
+  cfg.choices=[{label:"Start a new family", primary:true, fn:()=>startNewGame(true)}];
+  showModal(cfg);
+}
+
+/* ============================================================
+   RENDER
+============================================================ */
+function condColor(c){ return c>65 ? "var(--green)" : c>35 ? "var(--gold)" : "var(--red-hi)"; }
+
+function renderTop(){
+  animateCash();
+  $("famName").textContent=S.boss.fam+" · "+S.boss.name;
+  $("sheetBtn").innerHTML="👤 The Boss"+(S.skillPts>0?" <span class='own-count'>+"+S.skillPts+"</span>":"");
+  const inc=totalIncome()+racketIncome()-wages()-goonWages();
+  $("incomeVal").textContent=(inc>=0?"+":"−")+fmt(Math.abs(inc)).slice(0)+" / week";
+  $("incomeVal").style.color = inc>=0 ? "var(--green)" : "var(--red-hi)";
+
+  const t=TIERS[S.tier], next=TIERS[S.tier+1];
+  $("tierLbl").textContent="Respect — "+t.name;
+  if(next){
+    const lo=t.need, hi=next.need;
+    $("respectBar").style.width = clamp((S.respect-lo)/(hi-lo)*100,0,100)+"%";
+    $("respectVal").textContent=S.respect+" / "+hi;
+  } else {
+    $("respectBar").style.width="100%";
+    $("respectVal").textContent=S.respect+" — Don of the City";
+  }
+
+  $("heatBar").style.width=S.heat+"%";
+  const sEl=$("strikes"); sEl.innerHTML="";
+  for(let i=0;i<3;i++){ const d=document.createElement("i"); d.className="strike"+(i<S.strikes?" on":""); sEl.appendChild(d); }
+
+  const ap=$("apPips"); ap.innerHTML="";
+  for(let i=0;i<S.apMax;i++){ const d=document.createElement("i"); d.className="pip"+(i<S.ap?" on":""); ap.appendChild(d); }
+  $("weekVal").textContent="Week "+S.week;
+  $("endTurnBtn").disabled=S.over;
+}
+
+function renderTabs(){
+  const el=$("tabs"); el.innerHTML="";
+  const mb=document.createElement("button");
+  mb.className="tab"+(S.curDistrict===-1?" active":"");
+  mb.innerHTML="🗺️ City Map";
+  mb.onclick=()=>{ S.curDistrict=-1; renderAll(); save(); };
+  el.appendChild(mb);
+  DISTRICTS.forEach((d,i)=>{
+    const locked = S.tier<d.tier;
+    const b=document.createElement("button");
+    b.className="tab"+(i===S.curDistrict?" active":"")+(locked?" locked":"");
+    const cnt=S.props.filter(p=>p.d===i&&p.owner==="you").length;
+    b.innerHTML=d.icon+" "+d.name+(locked?" 🔒":(districtControlled(i)?" <span class='own-count'>★</span>":cnt?" <span class='own-count'>"+cnt+"</span>":""));
+    b.title=locked?"Unlocks at rank: "+TIERS[d.tier].name:"";
+    b.onclick=()=>{ if(locked){toast("🔒 "+d.name+" opens when you become <b>"+TIERS[d.tier].name+"</b>.","bad");return;} S.curDistrict=i; renderAll(); };
+    el.appendChild(b);
+  });
+}
+
+function renderMap(){
+  const el=$("grid");
+  el.className="mapwrap"; el.innerHTML="";
+  const ownerFill = p =>
+    p.owner==="you" ? "var(--gold)" :
+    p.owner==="market" ? "#564d40" :
+    p.owner===0 ? "var(--red)" : "var(--blue)";
+  let svg = "<svg id='map' viewBox='0 0 800 460' xmlns='http://www.w3.org/2000/svg'>";
+  svg += "<rect class='water' x='0' y='418' width='800' height='42' rx='6'/>";
+  svg += "<text class='maplegend' x='14' y='444'>~ ~  the bay  ~ ~</text>";
+  svg += "<circle cx='508' cy='447' r='4.5' fill='var(--gold)'/><text class='maplegend' x='518' y='451'>yours</text>";
+  svg += "<circle cx='575' cy='447' r='4.5' fill='"+(S.rivalDead[0]?"#3a322a":"var(--red)")+"'/><text class='maplegend' x='585' y='451'"+(S.rivalDead[0]?" opacity='.45'":"")+">"+(S.rivalDead[0]?"✝ ":"")+"Moretti</text>";
+  svg += "<circle cx='652' cy='447' r='4.5' fill='"+(S.rivalDead[1]?"#3a322a":"var(--blue)")+"'/><text class='maplegend' x='662' y='451'"+(S.rivalDead[1]?" opacity='.45'":"")+">"+(S.rivalDead[1]?"✝ ":"")+"Volkov</text>";
+  svg += "<circle cx='722' cy='447' r='4.5' fill='#564d40'/><text class='maplegend' x='732' y='451'>for sale</text>";
+  MAP_ZONES.forEach(z=>{
+    const d=DISTRICTS[z.d];
+    const locked = S.tier<d.tier;
+    const ctrl = !locked && districtControlled(z.d);
+    const dprops = S.props.filter(p=>p.d===z.d);
+    const mine = dprops.filter(p=>p.owner==="you").length;
+    svg += "<g class='dblock"+(locked?" locked":"")+(ctrl?" ctrl":"")+"' data-d='"+z.d+"'>";
+    svg += "<rect class='zone' x='"+z.x+"' y='"+z.y+"' width='"+z.w+"' height='"+z.h+"' rx='14'/>";
+    svg += "<text class='dn' x='"+(z.x+18)+"' y='"+(z.y+32)+"'>"+d.icon+" "+d.name+(ctrl?" ★":"")+"</text>";
+    svg += "<text class='ds' x='"+(z.x+18)+"' y='"+(z.y+52)+"'>"+(locked
+      ? "🔒 Opens at rank: "+TIERS[d.tier].name
+      : mine+" of "+dprops.length+" yours"+(ctrl?" — locked down, income +15%":""))+"</text>";
+    dprops.forEach((p,i)=>{
+      const cx=z.x+24+i*30, cy=z.y+z.h-22;
+      svg += "<circle class='dot' cx='"+cx+"' cy='"+cy+"' r='"+(p.owner==="you"?8:6.5)+"' fill='"+(locked?"#3a322a":ownerFill(p))+"'>";
+      svg += "<title>"+p.name+" — "+(p.owner==="you"?"yours":p.owner==="market"?"for sale":RIVALS[p.owner].name)+"</title></circle>";
+    });
+    if(S.safehouse && SAFEHOUSES[S.safehouse.id].d===z.d){
+      svg += "<text x='"+(z.x+z.w-34)+"' y='"+(z.y+z.h-16)+"' font-size='18'><title>Your safehouse: "+SAFEHOUSES[S.safehouse.id].name+"</title>🏠</text>";
+    }
+    if(!locked && canTakeoverDistrict(z.d)){
+      const bx=z.x+z.w-128, by=z.y+10;
+      svg += "<g class='tko' data-tko='"+z.d+"'><rect x='"+bx+"' y='"+by+"' width='118' height='24' rx='7'/>"+
+        "<text x='"+(bx+10)+"' y='"+(by+16)+"'>⚔ TAKE DISTRICT</text></g>";
+    }
+    svg += "</g>";
+  });
+  svg += "</svg>";
+  el.innerHTML=svg;
+  el.querySelectorAll(".dblock").forEach(g=>{
+    g.addEventListener("click",()=>{
+      const di=+g.dataset.d;
+      if(S.tier<DISTRICTS[di].tier){ toast("🔒 "+DISTRICTS[di].name+" opens when you become <b>"+TIERS[DISTRICTS[di].tier].name+"</b>.","bad"); return; }
+      S.curDistrict=di; renderAll(); save();
+    });
+  });
+  el.querySelectorAll(".tko").forEach(g=>{
+    g.addEventListener("click",e=>{
+      e.stopPropagation();
+      promptDistrictTakeover(+g.dataset.tko);
+    });
+  });
+}
+
+function renderGrid(){
+  const el=$("grid");
+  if(S.curDistrict===-1){ renderMap(); return; }
+  el.className="grid"; el.innerHTML="";
+  const d=S.curDistrict;
+  S.props.filter(p=>p.d===d).forEach((p,idx)=>{
+    const card=document.createElement("div");
+    card.className="pcard"+(p.owner==="you"?" mine":"")+(p.closed>0?" closed":"");
+    card.dataset.prop=p.id;
+    card.style.animationDelay=(idx*0.04)+"s";
+
+    let badge, body="";
+    if(p.owner==="you") badge="<span class='badge you'>Yours</span>";
+    else if(p.owner==="market") badge="<span class='badge sale'>For sale</span>";
+    else badge="<span class='badge "+RIVALS[p.owner].cls+"'>"+RIVALS[p.owner].short+"</span>";
+
+    const head="<div class='head'><span class='icon'>"+p.icon+"</span><div><div class='nm'>"+p.name+"</div><div class='typ'>"+p.type+"</div></div>"+badge+"</div>";
+
+    if(p.owner==="market"){
+      const price=marketPrice(p);
+      body =
+        "<div class='row'><span class='k'>Asking price</span><span class='v gold'>"+fmt(price)+"</span></div>"+
+        "<div class='row'><span class='k'>Base take</span><span class='v'>"+fmt(p.income)+"/wk</span></div>"+
+        "<div class='acts'><button class='btn small' onclick='buyProp("+p.id+")' "+(S.cash<price||S.ap<=0?"disabled":"")+">Buy · 1 AP</button></div>";
+    } else if(p.owner==="you"){
+      const inc=propIncome(p);
+      const sq=SQUEEZE.map((s,i)=>"<button class='"+(p.squeeze===i?("on"+(i===2?" hot":"")):"")+"' onclick='setSqueeze("+p.id+","+i+")'>"+s.label+"</button>").join("");
+      const rc=repairCost(p), uc=upgradeCost(p);
+      body =
+        "<div class='row'><span class='k'>Take</span><span class='v green'>+"+fmt(inc)+"/wk</span></div>"+
+        "<div class='row'><span class='k'>Cond.</span><div class='condbar'><i style='width:"+p.cond+"%;background:"+condColor(p.cond)+"'></i></div><span class='v'>"+Math.round(p.cond)+"%</span></div>"+
+        "<div class='row'><span class='k'>Level</span><span class='lvl'>"+[1,2,3].map(l=>"<i class='"+(p.level>=l?"on":"")+"'></i>").join("")+"</span></div>"+
+        "<div class='squeeze'>"+sq+"</div>"+
+        "<div class='acts'>"+
+          "<button class='btn small' onclick='repairProp("+p.id+")' "+(p.cond>=99||S.cash<rc||S.ap<=0?"disabled":"")+" title='Restore to 100%'>Repair "+fmt(rc)+"</button>"+
+          (p.level<3?"<button class='btn small' onclick='upgradeProp("+p.id+")' "+(S.cash<uc||S.ap<=0?"disabled":"")+" title='+50% income'>Upgrade "+fmt(uc)+"</button>":"")+
+          "<button class='btn small ghost' onclick='sellProp("+p.id+")'>Sell</button>"+
+        "</div>";
+      if(p.closed>0) body+="<div class='closed-tag'>CLOSED BY POLICE<small>Reopens in "+p.closed+" week"+(p.closed>1?"s":"")+"</small></div>";
+    } else {
+      const bo=Math.round(marketPrice(p)*1.5), mu=Math.round(marketPrice(p)*0.85);
+      body =
+        "<div class='row'><span class='k'>Their take</span><span class='v'>~"+fmt(p.income)+"/wk</span></div>"+
+        "<div class='acts'>"+
+          "<button class='btn small' onclick='buyoutProp("+p.id+")' "+(S.cash<bo||S.ap<=0?"disabled":"")+" title='Pay a premium, stay clean. +8 respect'>Buyout "+fmt(bo)+"</button>"+
+          "<button class='btn small danger' onclick='muscleProp("+p.id+")' "+(S.cash<mu||S.ap<=0?"disabled":"")+" title='Cheaper, but +14 heat and they may hit back. +14 respect'>Muscle "+fmt(mu)+"</button>"+
+        "</div>";
+    }
+    card.innerHTML=head+body;
+    el.appendChild(card);
+  });
+}
+
+function renderPanel(){
+  $("capoCount").textContent=S.capos+" / "+TIERS[S.tier].capos;
+  $("goonCount").textContent=S.goons+" / "+goonCap();
+  $("wageVal").textContent=fmt(wages()+goonWages());
+  $("hireCost").textContent=fmt(hireCost());
+  $("hireBtn").disabled=S.over||S.capos>=TIERS[S.tier].capos||S.cash<hireCost();
+  $("goonCost").textContent=fmt(goonCost());
+  $("hireGoonBtn").disabled=S.over||S.goons>=goonCap()||S.cash<goonCost();
+  $("jobBtn").disabled=S.over||S.jobsRun>=jobsPerWeek()||S.ap<=0;
+  $("jobDesc").textContent=S.jobsRun>=jobsPerWeek()
+    ? "Done for the week — the crew is lying low."
+    : "🎲 Cunning check, DC "+(9+Math.round(S.heat/12))+". ~"+fmt(jobPayBase())+(jobsPerWeek()>1?" ("+(jobsPerWeek()-S.jobsRun)+" left)":"");
+  $("layLowBtn").disabled=S.over||S.ap<=0;
+  $("bribeBtn").disabled=S.over||S.bribeUsed||S.cash<bribeCost();
+  $("bribeCost").textContent=fmt(bribeCost());
+}
+
+function renderRivals(){
+  const el=$("rivalsBox"); el.innerHTML="";
+  RIVALS.forEach(r=>{
+    const row=document.createElement("div");
+    row.className="sh-offer";
+    const held=rivalHoldings(r.id).length;
+    if(S.rivalDead[r.id]){
+      row.innerHTML="<span style='opacity:.5'>✝ <b>"+r.name+"</b></span><span class='badge "+r.cls+"' style='opacity:.6'>Eliminated</span>";
+    } else if(canOrderHit(r.id)){
+      row.innerHTML="<span><b>"+r.name+"</b><br><span style='color:var(--muted);font-size:10.5px'>Holds nothing. Exposed.</span></span>"+
+        "<button class='btn small danger' onclick='promptHit("+r.id+")'>🎯 The Hit</button>";
+    } else {
+      row.innerHTML="<span><b>"+r.name+"</b><br><span style='color:var(--muted);font-size:10.5px'>Take all their turf to expose the Don.</span></span>"+
+        "<span class='badge "+r.cls+"'>"+held+" propert"+(held===1?"y":"ies")+"</span>";
+    }
+    el.appendChild(row);
+  });
+}
+
+function renderSafehouse(){
+  const el=$("safehouse"); el.innerHTML="";
+  if(!S.safehouse){
+    const intro=document.createElement("div");
+    intro.style.cssText="font-size:11px;color:var(--muted);margin-bottom:6px";
+    intro.textContent="Every family needs a roof nobody can find. Buying one costs 1 action.";
+    el.appendChild(intro);
+    SAFEHOUSES.forEach((sh,i)=>{
+      const locked=S.tier<DISTRICTS[sh.d].tier;
+      const row=document.createElement("div");
+      row.className="sh-offer";
+      row.innerHTML="<span"+(locked?" style='opacity:.45'":"")+">"+sh.icon+" <b>"+sh.name+"</b><br><span style='color:var(--muted);font-size:10.5px'>"+(locked?"🔒 Opens with "+DISTRICTS[sh.d].name:sh.desc)+"</span></span>"+
+        (locked?"":"<button class='btn small' onclick='buySafehouse("+i+")' "+(S.cash<sh.cost||S.ap<=0?"disabled":"")+">"+fmt(sh.cost)+"</button>");
+      el.appendChild(row);
+    });
+    return;
+  }
+  const sh=SAFEHOUSES[S.safehouse.id];
+  const head=document.createElement("div");
+  head.className="sh-head";
+  head.innerHTML="<span class='ic'>"+sh.icon+"</span><span><span class='t'>"+sh.name+"</span><br><span class='d'>"+DISTRICTS[sh.d].name+" · defense +"+(S.safehouse.barracks+Math.floor(S.goons/2))+"</span></span>";
+  el.appendChild(head);
+  SH_MODS.forEach(m=>{
+    const lvl=S.safehouse[m.key];
+    const row=document.createElement("div");
+    row.className="shmod";
+    const pips=Array.from({length:3},(_,i)=>"<i class='"+(lvl>i?"on":"")+"'></i>").join("");
+    row.innerHTML="<span class='k'>"+m.icon+" <b>"+m.name+"</b> <span class='lvl' style='display:inline-flex;vertical-align:middle;margin-left:4px'>"+pips+"</span><br><span class='d'>"+m.desc+"</span></span>"+
+      (lvl>=3?"<span class='v gold'>MAX</span>":"<button class='btn small' onclick='upgradeSafehouse(\""+m.key+"\")' "+(S.over||S.cash<shModCost(m.key)?"disabled":"")+">"+fmt(shModCost(m.key))+"</button>");
+    el.appendChild(row);
+  });
+  if(S.safehouse.id<SAFEHOUSES.length-1){
+    const note=document.createElement("div");
+    note.style.cssText="font-size:10.5px;color:var(--muted);margin-top:7px";
+    note.textContent="Better safehouses unlock with new districts — moving refunds 60% of what you've sunk in.";
+    el.appendChild(note);
+    SAFEHOUSES.forEach((s2,i)=>{
+      if(i<=S.safehouse.id || S.tier<DISTRICTS[s2.d].tier) return;
+      const row=document.createElement("div");
+      row.className="sh-offer";
+      row.innerHTML="<span>"+s2.icon+" <b>"+s2.name+"</b></span>"+
+        "<button class='btn small ghost' onclick='buySafehouse("+i+")' "+(S.cash<s2.cost-Math.round(S.safehouse.invested*0.6)||S.ap<=0?"disabled":"")+">Move · "+fmt(s2.cost)+"</button>";
+      el.appendChild(row);
+    });
+  }
+}
+
+function renderRackets(){
+  const el=$("rackets"); el.innerHTML="";
+  RACKETS.forEach((r,i)=>{
+    const lvl=S.rackets[i];
+    const locked=S.tier<r.tier;
+    const row=document.createElement("div");
+    row.className="racket"+(locked?" lockd":"");
+    const pips=Array.from({length:RACKET_MAX},(_,k)=>"<i class='"+(lvl>k?"on":"")+"'></i>").join("");
+    let sub;
+    if(locked){
+      sub="<span>🔒 Unlocks at "+TIERS[r.tier].name+"</span><span></span>";
+    } else {
+      const left = lvl>0 ? "+"+fmt(r.inc*lvl)+"/wk · +"+(r.heat*lvl).toFixed(1)+" heat" : r.desc;
+      const btn = lvl>=RACKET_MAX
+        ? "<span class='v gold'>MAX</span>"
+        : "<button class='btn small' onclick='upgradeRacket("+i+")' "+(S.over||S.cash<racketCost(i)?"disabled":"")+">"+(lvl===0?"Start":"Expand")+" "+fmt(racketCost(i))+"</button>";
+      sub="<span>"+left+"</span>"+btn;
+    }
+    row.innerHTML="<div class='top'><span class='t'>"+r.icon+" "+r.name+"</span><span class='lvl'>"+pips+"</span></div><div class='sub'>"+sub+"</div>";
+    el.appendChild(row);
+  });
+}
+
+function renderBooks(){
+  $("worthVal").textContent=fmt(netWorth());
+  const h=(S.worthHist&&S.worthHist.length>1)?S.worthHist:null;
+  const sp=$("spark");
+  if(!h){ sp.innerHTML=""; return; }
+  const min=Math.min(...h), max=Math.max(...h), span=Math.max(1,max-min);
+  const pts=h.map((v,i)=>((i/(h.length-1))*100).toFixed(1)+","+(37-((v-min)/span)*33).toFixed(1)).join(" ");
+  sp.innerHTML="<polygon class='area' points='0,40 "+pts+" 100,40'/><polyline points='"+pts+"'/>";
+}
+
+function renderLog(){
+  const el=$("log"); el.innerHTML="";
+  S.log.slice(-40).forEach(l=>{
+    const p=document.createElement("p");
+    p.className=l.cls;
+    p.innerHTML="<b>W"+l.w+"</b> · "+l.msg;
+    el.appendChild(p);
+  });
+}
+
+function renderAll(){
+  renderTop(); renderTabs(); renderGrid(); renderPanel(); renderRivals(); renderSafehouse(); renderRackets(); renderBooks(); renderLog();
+}
+
+/* ============================================================
+   INTRO / NEW GAME
+============================================================ */
+function showIntro(){
+  showModal({
+    flare:"🚬", kicker:"Welcome to the family", title:"You Run This Family Now",
+    body:"What's left of the old Don's empire is <b>$3,000</b>, two good hands a week, and a city that doesn't know your name yet.\n\n" +
+      "<b>The loop:</b> spend your actions buying fronts, fixing them up, and squeezing them for income — then end the week to collect. Check the <b>🗺️ City Map</b> to see who holds what.\n\n" +
+      "<b>The dice:</b> jobs, takeovers and tight spots are decided by a <b>d20 + your skills</b>. Rank up to earn skill points and perks — spend them on the Boss screen (👤).\n\n" +
+      "<b>The climb:</b> respect ranks you up, unlocking districts, rackets, safehouses and a bigger crew — <b>capos</b> add actions, <b>goons</b> guard turf and beef up jobs. Hold 3+ properties in a district and you can take the rest in one night from the map. Strip a rival family of everything and you can order the <b>hit on their Don</b>.\n\n" +
+      "<b>The catch:</b> squeezing, rackets and muscle all draw <b>heat</b>. Hit 100 and the city cracks down — three crackdowns is a RICO case. Properties decay, rivals buy up the map, and the loan sharks are always watching.\n\n" +
+      "Start on the docks. Buy cheap, collect, climb.",
+    choices:[{label:"Va bene. Let's work.", primary:true, fn:()=>{S.seenIntro=true;}}],
+  });
+}
+
+function startNewGame(skipConfirm){
+  // defer creation so a closing modal (confirm / game over) can't wipe it
+  const go=()=>{ S=newState(); shownCash=S.cash; save(); renderAll(); setTimeout(ccStep1,50); };
+  if(skipConfirm){ go(); return; }
+  showModal({
+    kicker:"New game", title:"Walk away from this family?",
+    body:"Your current empire will be erased. There's no coming back.",
+    choices:[
+      {label:"Burn it down — start over", danger:true, fn:go},
+      {label:"Stay", primary:true},
+    ],
+  });
+}
+
+/* ============================================================
+   BOOT
+============================================================ */
+$("endTurnBtn").onclick=endTurn;
+$("sheetBtn").onclick=()=>{ if(!modalOpen) showSheet(); };
+$("hireBtn").onclick=hireCapo;
+$("hireGoonBtn").onclick=hireGoon;
+$("jobBtn").onclick=runJob;
+$("layLowBtn").onclick=layLow;
+$("bribeBtn").onclick=bribe;
+$("newGameBtn").onclick=()=>startNewGame(false);
+$("helpBtn").onclick=showIntro;
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && !modalOpen) endTurn();
+  if(e.key==="Enter" && modalOpen){
+    const first=$("modal").querySelector(".choices .btn.primary")||$("modal").querySelector(".choices .btn");
+    if(first && !first.disabled) first.click();
+  }
+});
+
+if(!load()) S=newState();
+shownCash=S.cash;
+renderAll();
+if(!S.seenIntro) ccStep1();
+else if(S.over) startNewGame(true);
+</script>
+</body>
+</html>
