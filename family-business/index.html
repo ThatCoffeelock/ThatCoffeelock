@@ -542,7 +542,7 @@ const PERK_AT = [3,6,9]; // skill levels where a perk choice unlocks
 
 const BACKGROUNDS = [
   {id:"enforcer", icon:"🥊", name:"The Enforcer", skill:"force",
-   desc:"You did the family's heavy lifting.", bonus:"Starts with 2 loyal goons."},
+   desc:"You did the family's heavy lifting.", bonus:"Starts with 2 loyal goons who work for family, not wages."},
   {id:"grifter", icon:"🎴", name:"The Grifter", skill:"cunning",
    desc:"Cards, cons, and quick exits.", bonus:"Starts with an extra $1,000."},
   {id:"diplomat", icon:"🤝", name:"The Diplomat", skill:"influence",
@@ -596,16 +596,16 @@ let S = null;
 
 function newState(){
   return {
-    week:1, cash:2500, respect:0, tier:0, heat:0, strikes:0,
+    week:1, cash:3000, respect:0, tier:0, heat:0, strikes:0,
     capos:0, goons:0, ap:2, apMax:2,
     jobsRun:0, bribeUsed:false,
     boomWeeks:0, retaliation:-1, debtWeeks:0,
     curDistrict:0,
-    rackets:RACKETS.map(()=>0), controlled:[], worthHist:[2500],
+    rackets:RACKETS.map(()=>0), controlled:[], worthHist:[3000],
     boss:{name:"Don Corvo", fam:"The Corvo Family", bg:null},
     skills:{force:0,cunning:0,influence:0,business:0},
     skillPts:0, perks:[], untouchableUsed:false,
-    safehouse:null, rivalDead:[false,false],
+    safehouse:null, rivalDead:[false,false], freeGoons:0,
     props: PROPS.map((p,i)=>({
       id:i, d:p[0], icon:p[1], name:p[2], type:p[3],
       price:p[4], income:p[5],
@@ -637,6 +637,7 @@ function normalize(){ // fill fields added after a save was written
   S.safehouse = S.safehouse||null;
   if(S.jobsRun===undefined) S.jobsRun = S.jobUsed?1:0;
   S.rivalDead = S.rivalDead||[false,false];
+  S.freeGoons = S.freeGoons||0;
 }
 
 /* ============================================================
@@ -681,7 +682,7 @@ function propValue(p){ // what it's worth in your hands
 }
 function propIncome(p){
   if(p.closed>0) return 0;
-  let inc = p.income * LVL_MULT[p.level-1] * (0.3 + 0.7*p.cond/100) * SQUEEZE[p.squeeze].mult;
+  let inc = p.income * 1.25 * LVL_MULT[p.level-1] * (0.3 + 0.7*p.cond/100) * SQUEEZE[p.squeeze].mult;
   if(p.squeeze===2 && hasPerk("f2a")) inc *= 1.2;
   if(districtControlled(p.d)) inc *= hasPerk("i2b") ? 1.25 : 1.15;
   if(S.boomWeeks>0) inc *= 1.3;
@@ -689,7 +690,7 @@ function propIncome(p){
 }
 function totalIncome(){ return S.props.filter(p=>p.owner==="you").reduce((s,p)=>s+propIncome(p),0); }
 function wages(){ return S.capos * 180; }
-function goonWages(){ return Math.round(S.goons * 100 * (hasPerk("f2b")?0.5:1)); }
+function goonWages(){ return Math.round(Math.max(0, S.goons - S.freeGoons) * 100 * (hasPerk("f2b")?0.5:1)); }
 function goonCap(){ return 2 + S.tier*2 + (S.safehouse?S.safehouse.barracks:0); }
 function goonCost(){ return 250 + S.goons*60; }
 function racketCost(i){ return Math.round(RACKETS[i].base * Math.pow(RACKETS[i].mult, S.rackets[i])); }
@@ -711,7 +712,7 @@ function addRespect(n){
   checkTier();
 }
 function addHeat(n){
-  S.heat = clamp(S.heat + n, 0, 100);
+  S.heat = clamp(Math.round((S.heat + n)*10)/10, 0, 100);
 }
 function log(msg, cls){
   S.log.push({msg, cls:cls||"", w:S.week});
@@ -948,7 +949,7 @@ function runJob(){
   if(S.jobsRun>=jobsPerWeek()){ toast("The crew already ran "+(jobsPerWeek()>1?"its jobs":"a job")+" this week.","bad"); return; }
   if(!spendAP()) return;
   S.jobsRun++;
-  const dc = 10 + Math.round(S.heat/10);
+  const dc = 9 + Math.round(S.heat/12);
   const res = check("cunning", dc);
   const critAt = hasPerk("c3a")?18:20;
   const crit = res.roll>=critAt && res.success;
@@ -1271,7 +1272,7 @@ function ccFinish(){
   S.boss={name:CC.name, fam:CC.fam, bg:CC.bg};
   SKILL_KEYS.forEach(k=>S.skills[k]=CC.alloc[k]+(bg.skill===k?2:0));
   S.skillPts=CC.pts;
-  if(CC.bg==="enforcer") S.goons=2;
+  if(CC.bg==="enforcer"){ S.goons=2; S.freeGoons=2; }
   if(CC.bg==="grifter") S.cash+=1000;
   if(CC.bg==="diplomat") S.respect=20;
   if(CC.bg==="bookkeeper") S.rackets[0]=1;
@@ -1294,7 +1295,7 @@ function checkTier(){
       S.won=true;
       showModal({
         flare:"👑", kicker:"Victory", title:"Don of the City",
-        body:"Week "+S.week+". Every district pays tribute, every door opens before you knock. The city is yours.\n\nYou built it from "+fmt(2500)+" and a pawn shop on the docks. Keep playing if you like — empires still need running.",
+        body:"Week "+S.week+". Every district pays tribute, every door opens before you knock. The city is yours.\n\nYou built it from "+fmt(3000)+" and a pawn shop on the docks. Keep playing if you like — empires still need running.",
         choices:[{label:"The city is mine", primary:true}],
       });
     } else {
@@ -1316,20 +1317,39 @@ function rivalTurn(report){
   if(S.week<3) return;
   RIVALS.forEach(r=>{
     if(S.rivalDead[r.id]) return;
-    let chance = clamp(0.35 + S.week*0.006, 0, 0.7);
+    if(rivalHoldings(r.id).length>=5) return; // even greed has a ceiling
+    let chance = clamp(0.22 + S.week*0.004, 0, 0.5);
     if(hasPerk("f3b")) chance *= 0.7;
     if(Math.random()>chance) return;
-    // rivals shop in districts up to one above your tier
+    // rivals shop in districts up to one above your tier — and take the best stock first
     const maxD = Math.min(4, S.tier+1);
     const targets = S.props.filter(p=>p.owner==="market" && p.d<=maxD);
     if(!targets.length) return;
-    // prefer cheaper properties, slight randomness
-    targets.sort((a,b)=>marketPrice(a)-marketPrice(b));
+    targets.sort((a,b)=>marketPrice(b)-marketPrice(a));
     const t = targets[Math.floor(Math.random()*Math.min(3,targets.length))];
     t.owner = r.id;
     report.push("🕴️ The <b>"+r.short+"s</b> took over "+t.name+" in "+DISTRICTS[t.d].name+".");
     log("The "+r.short+"s claimed <b>"+t.name+"</b>.","bad");
   });
+  // strong rivals make plays for YOUR turf (defended by Force + goons)
+  RIVALS.forEach(r=>{
+    if(S.rivalDead[r.id]) return;
+    const mine=owned();
+    if(rivalHoldings(r.id).length>=4 && mine.length>=4 && Math.random()<0.08){
+      const target=mine.slice().sort((a,b)=>a.cond-b.cond)[0];
+      const res=check("force", 11, Math.floor(S.goons*0.75)+(S.safehouse?S.safehouse.barracks:0));
+      if(res.success){
+        addRespect(6);
+        report.push("🛡️ The <b>"+r.short+"s</b> made a play for "+target.name+" — your crew held the door. <i>(d20: "+res.roll+"+"+res.mod+"="+res.total+" vs "+res.dc+")</i> +6 respect.");
+        log("Held <b>"+target.name+"</b> against the "+r.short+"s.","good");
+      } else {
+        target.owner=r.id; target.squeeze=0;
+        report.push("⚔️ The <b>"+r.short+"s</b> took <b>"+target.name+"</b> from you at gunpoint. <i>(d20: "+res.roll+"+"+res.mod+"="+res.total+" vs "+res.dc+")</i> Take it back — or take their Don.");
+        log("Lost <b>"+target.name+"</b> to the "+r.short+"s!","bad");
+      }
+    }
+  });
+
   // retaliation for muscling
   if(S.retaliation>=0 && S.rivalDead[S.retaliation]){ S.retaliation=-1; }
   if(S.retaliation>=0){
@@ -1376,7 +1396,7 @@ function pickEvent(){
     return {kicker:"Street Event", title:"A Brutal Winter Week", body:"Burst pipes and cracked windows across every property you hold.\n\n<b>All your properties: condition −8</b>"};
   });
   add(12, ()=>{ // cop shakedown — choice w/ Influence check
-    const ask=Math.round(350+S.tier*250);
+    const ask=Math.round(200+S.tier*250);
     return {kicker:"Decision", title:"A Detective Comes Calling",
       body:"Detective Marsh slides into the booth across from you. “Nice little operation. Be a shame if I got curious.” He wants <b>"+fmt(ask)+"</b>.",
       choices:[
@@ -1394,10 +1414,11 @@ function pickEvent(){
       ]};
   });
   add(8, ()=>{ // informant — choice w/ Force check
+    const ask=400+S.tier*150;
     return {kicker:"Decision", title:"A Rat in the Walls",
-      body:"One of your runners has been talking to the Feds. Your consigliere can make it a misunderstanding — for <b>$600</b> in lawyers and favors. Or you handle it the old way.",
+      body:"One of your runners has been talking to the Feds. Your consigliere can make it a misunderstanding — for <b>"+fmt(ask)+"</b> in lawyers and favors. Or you handle it the old way.",
       choices:[
-        {label:"Lawyers and favors — $600", fn:()=>{ if(S.cash>=600){S.cash-=600; log("The rat recanted. Expensive, but quiet.");} else {addHeat(10); log("No cash for lawyers — the rat talked. +10 heat","bad");} }},
+        {label:"Lawyers and favors — "+fmt(ask), fn:()=>{ if(S.cash>=ask){S.cash-=ask; log("The rat recanted. Expensive, but quiet.");} else {addHeat(10); log("No cash for lawyers — the rat talked. +10 heat","bad");} }},
         {label:"🎲 The old way (Force, DC 12)", danger:true, fn:()=>{
           const res=check("force",12);
           if(res.success){ addHeat(5); addRespect(10); log("The rat won't be talking. The street took notice. +10 respect","gold"); }
@@ -1500,6 +1521,8 @@ function endTurn(){
     S.cash+=interest; report.push("🏦 Compound interest: <b>+"+fmt(interest)+"</b>.");
   }
   if(hasPerk("i2a")){ addRespect(2); }
+  const tribute=DISTRICTS.filter((d,i)=>districtControlled(i)).length*2;
+  if(tribute>0){ addRespect(tribute); report.push("👑 Tribute from your districts: <b>+"+tribute+" respect</b>."); }
   if(w+gw>0) report.push("🤵 Crew wages: <b>−"+fmt(w+gw)+"</b>"+(gw>0?" ("+fmt(w)+" capos, "+fmt(gw)+" goons)":"")+".");
   if(income===0 && owned().length===0) report.push("You hold no property yet. Buy a front — that's where the money lives.");
 
@@ -1513,8 +1536,8 @@ function endTurn(){
   // 3) heat from squeezing, rackets, goons + cooling
   let squeezeHeat=0;
   owned().forEach(p=>squeezeHeat+=SQUEEZE[p.squeeze].heat);
-  const ambient = racketHeat() + S.goons*0.4;
-  const cool = 3 + (S.tier>=2?4:0) + (S.safehouse?S.safehouse.lounge:0) + (hasPerk("c2a")?2:0);
+  const ambient = racketHeat() + S.goons*0.3;
+  const cool = 4 + (S.tier>=2?4:0) + (S.safehouse?S.safehouse.lounge:0) + (hasPerk("c2a")?2:0);
   addHeat(squeezeHeat+ambient-cool);
   if(squeezeHeat+ambient>0.5) report.push("🔥 Squeezing, rackets and muscle drew <b>+"+Math.round(squeezeHeat+ambient)+" heat</b> (cooled −"+cool+").");
 
@@ -1552,8 +1575,8 @@ function endTurn(){
 
   // 7) debt spiral
   if(S.cash<0){
-    S.cash=Math.round(S.cash*1.12);
-    report.push("🦈 You're into the loan sharks for <b>"+fmt(-S.cash)+"</b> (12% weekly juice). Sell something or earn, fast.");
+    S.cash=Math.round(S.cash*1.10);
+    report.push("🦈 You're into the loan sharks for <b>"+fmt(-S.cash)+"</b> (10% weekly juice). Sell something or earn, fast.");
     if(S.cash<-5000){ gameOver("debt"); return; }
   }
 
@@ -1777,7 +1800,7 @@ function renderPanel(){
   $("jobBtn").disabled=S.over||S.jobsRun>=jobsPerWeek()||S.ap<=0;
   $("jobDesc").textContent=S.jobsRun>=jobsPerWeek()
     ? "Done for the week — the crew is lying low."
-    : "🎲 Cunning check, DC "+(10+Math.round(S.heat/10))+". ~"+fmt(jobPayBase())+(jobsPerWeek()>1?" ("+(jobsPerWeek()-S.jobsRun)+" left)":"");
+    : "🎲 Cunning check, DC "+(9+Math.round(S.heat/12))+". ~"+fmt(jobPayBase())+(jobsPerWeek()>1?" ("+(jobsPerWeek()-S.jobsRun)+" left)":"");
   $("layLowBtn").disabled=S.over||S.ap<=0;
   $("bribeBtn").disabled=S.over||S.bribeUsed||S.cash<bribeCost();
   $("bribeCost").textContent=fmt(bribeCost());
@@ -1902,7 +1925,7 @@ function renderAll(){
 function showIntro(){
   showModal({
     flare:"🚬", kicker:"Welcome to the family", title:"You Run This Family Now",
-    body:"What's left of the old Don's empire is <b>$2,500</b>, two good hands a week, and a city that doesn't know your name yet.\n\n" +
+    body:"What's left of the old Don's empire is <b>$3,000</b>, two good hands a week, and a city that doesn't know your name yet.\n\n" +
       "<b>The loop:</b> spend your actions buying fronts, fixing them up, and squeezing them for income — then end the week to collect. Check the <b>🗺️ City Map</b> to see who holds what.\n\n" +
       "<b>The dice:</b> jobs, takeovers and tight spots are decided by a <b>d20 + your skills</b>. Rank up to earn skill points and perks — spend them on the Boss screen (👤).\n\n" +
       "<b>The climb:</b> respect ranks you up, unlocking districts, rackets, safehouses and a bigger crew — <b>capos</b> add actions, <b>goons</b> guard turf and beef up jobs. Hold 3+ properties in a district and you can take the rest in one night from the map. Strip a rival family of everything and you can order the <b>hit on their Don</b>.\n\n" +

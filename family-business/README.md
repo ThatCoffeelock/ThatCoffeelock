@@ -30,7 +30,9 @@ Each turn is a **week**. You get limited **actions** (2 + one per capo):
 
 ## The rivals
 
-The **Moretti Family** and the **Volkov Bratva** are playing the same game you are — buying up the map, retaliating when muscled, assaulting your safehouse. Take a rival's last property and their Don stands exposed: order the **hit** (Force check, DC 15) to wipe the family from the city permanently. Fail, and you've made a martyr.
+The **Moretti Family** and the **Volkov Bratva** are playing the same game you are — buying up the best property on the map, retaliating when muscled, assaulting your safehouse, and once they're entrenched, making armed plays for *your* turf (defended by a Force roll plus your goons and barracks). Take a rival's last property and their Don stands exposed: order the **hit** (Force check, DC 15) to wipe the family from the city permanently. Fail, and you've made a martyr. Eliminate both to rule as the last family standing.
+
+Controlled districts also pay weekly **tribute** in respect, so the empire snowballs as it grows.
 
 ## The catch
 
