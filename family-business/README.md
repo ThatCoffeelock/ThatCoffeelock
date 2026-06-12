@@ -10,10 +10,13 @@ Open `index.html` in any browser — no install, no build step. Progress autosav
 
 Each turn is a **week**. You get a limited number of **actions** (2 + one per capo on payroll):
 
-- **Buy** properties across five districts — docks, Old Town, Market Row, the Neon Strip, Crown Heights.
+- **Buy** properties across five districts — docks, Old Town, Market Row, the Neon Strip, Crown Heights. The **🗺️ City Map** shows who holds every property at a glance.
 - **Squeeze** each front: *Clean*, *Firm*, or *Brutal*. Harder squeezing pays more, but draws **heat** and wears the place down faster.
-- **Repair** decaying properties and **upgrade** them for bigger takes.
+- **Repair** decaying properties and **upgrade** them for bigger takes. Own *every* property in a district to lock it down: +15% income there and a respect bonus.
+- **Run rackets** — Numbers Game, Protection, Smuggling, Counterfeiting — upgradeable side incomes that each add a little weekly heat.
+- **Hire goons** to guard your turf: they block rival retaliation, deter backlash on squeezed businesses, and raise job payouts — but armed men standing around get noticed.
 - **Run jobs** for quick cash and respect, **lay low** or **bribe City Hall** to cool the heat.
+- Watch the family **net worth** climb on the books panel.
 
 End the week to collect the take — then rivals move, buildings decay, and the streets throw events at you.
 
